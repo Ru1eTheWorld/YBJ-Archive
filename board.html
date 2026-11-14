@@ -833,7 +833,7 @@
     if (lastSync === false) {
       line2 = '지금은 방명록을 불러오지 못했어요 · 오른쪽 위 🔄 로 다시 시도해 주세요.';
     } else if (lastSync === true && !boardNotes().length) {
-      line2 = '아직 아무도 붙이지 않았어요 · 첫 번째 응원을 남겨 보세요!';
+      line2 = '';   /* 빈 보드에서는 위 빈 상태 안내가 이미 말해 줘요 */
     } else if (lastSync === null) {
       line2 = '방명록을 불러오는 중이에요.';
     } else {
