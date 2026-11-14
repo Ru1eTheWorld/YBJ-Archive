@@ -213,20 +213,11 @@
     -webkit-mask-image:linear-gradient(116deg, transparent 6%, #000 28%, #000 60%, rgba(0,0,0,.25) 78%, transparent 92%);
     mask-image:linear-gradient(116deg, transparent 6%, #000 28%, #000 60%, rgba(0,0,0,.25) 78%, transparent 92%);
   }
-  /* glitter */
-  .h-glitter{
-    background-image:
-      radial-gradient(circle at 20% 30%, rgba(255,255,255,.95) 0 1.1px, transparent 1.9px),
-      radial-gradient(circle at 70% 62%, rgba(255,244,206,.95) 0 .9px, transparent 1.7px),
-      radial-gradient(circle at 44% 86%, rgba(196,238,255,.95) 0 1px, transparent 1.8px),
-      radial-gradient(circle at 86% 16%, rgba(255,214,255,.95) 0 .9px, transparent 1.7px),
-      radial-gradient(circle at 8% 74%, rgba(255,255,255,.85) 0 .8px, transparent 1.6px);
-    background-size:33px 33px, 47px 47px, 61px 61px, 79px 79px, 97px 97px;
-    background-position:0 0, 12px 9px, 27px 31px, 5px 44px, 33px 17px;
-    mix-blend-mode:screen;
-    filter:drop-shadow(0 0 1px rgba(255,255,255,.7));
-  }
-  [data-pattern="glitter"] .h-glitter{animation:twinkle 3.6s ease-in-out infinite}
+  /* plain — 원본 사진 모드: 홀로그램 레이어를 모두 숨김 */
+  [data-pattern="plain"] .h-prism,
+  [data-pattern="plain"] .h-aurora,
+  [data-pattern="plain"] .spec,
+  [data-pattern="plain"] .streak{opacity:0;animation:none;transition:opacity .35s ease}
   /* aurora */
   .h-aurora{
     background:
@@ -239,11 +230,9 @@
   }
   [data-pattern="aurora"] .h-aurora{animation:drift 14s ease-in-out infinite alternate}
   [data-pattern="prism"] .h-prism{opacity:.46}
-  [data-pattern="glitter"] .h-glitter{opacity:.55}
   [data-pattern="aurora"] .h-aurora{opacity:.58}
 
   html[data-theme="light"] .h-prism{mix-blend-mode:overlay;opacity:0;filter:blur(3px) saturate(1.5)}
-  html[data-theme="light"] .h-glitter{mix-blend-mode:hard-light}
   html[data-theme="light"] [data-pattern="prism"] .h-prism{opacity:.75}
 
   /* specular + streak */
@@ -452,16 +441,12 @@
   .pill.ghost{flex:0 0 40%;background:transparent;border-color:rgba(255,255,255,.16)}
   html[data-theme="light"] .pill.ghost{border-color:rgba(120,88,36,.3)}
 
-  @keyframes twinkle{
-    0%,100%{opacity:.45}
-    50%{opacity:.9}
-  }
   @keyframes drift{
     0%{transform:translate3d(calc(var(--nx,0) * -26px), calc(var(--ny,0) * -26px),0) scale(1.2) rotate(0deg)}
     100%{transform:translate3d(calc(var(--nx,0) * -26px + 12px), calc(var(--ny,0) * -26px - 10px),0) scale(1.32) rotate(6deg)}
   }
   @media (prefers-reduced-motion:reduce){
-    .h-glitter,.h-aurora{animation:none}
+    .h-aurora{animation:none}
   }
   /* 가로로 눕혔을 때 */
   @media (orientation:landscape) and (max-height:520px){
@@ -500,7 +485,6 @@
           <div class="shade"></div>
           <div class="foil">
             <div class="h h-prism"></div>
-            <div class="h h-glitter"></div>
             <div class="h h-aurora"></div>
           </div>
           <div class="spec"></div>
@@ -518,7 +502,6 @@
           <div class="shade"></div>
           <div class="foil">
             <div class="h h-prism"></div>
-            <div class="h h-glitter"></div>
             <div class="h h-aurora"></div>
           </div>
           <div class="spec"></div>
@@ -539,9 +522,9 @@
 </main>
 
 <nav class="tray">
-  <div class="chips" role="group" aria-label="홀로그램 패턴">
+  <div class="chips" role="group" aria-label="카드 패턴">
     <button class="chip on" type="button" data-pattern="prism">✨ 프리즘</button>
-    <button class="chip" type="button" data-pattern="glitter">🌟 글리터</button>
+    <button class="chip" type="button" data-pattern="plain">🖼️ 원본</button>
     <button class="chip" type="button" data-pattern="aurora">🌈 오로라</button>
   </div>
   <div class="actions">
@@ -666,7 +649,15 @@
   }
 
   /* ---------- pattern ---------- */
+  /* 예전 '글리터' 모드는 '원본 사진' 모드로 이어진다 */
+  var PATTERN_ALIAS = { glitter: "plain" };
+  var PATTERNS = { prism: 1, plain: 1, aurora: 1 };
+  function normalizePattern(p){
+    var v = PATTERN_ALIAS[p] || p;
+    return PATTERNS[v] ? v : "plain";
+  }
   function applyPattern(p){
+    p = normalizePattern(p);
     flipper.setAttribute("data-pattern", p);
     store.pattern = p;
     $$(".chip").forEach(function(c){
