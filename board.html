@@ -225,6 +225,8 @@
     content:'내가 붙임';margin-left:5px;font-size:8px;font-weight:800;letter-spacing:0;
     padding:2px 5px;border-radius:999px;background:rgba(0,0,0,.09);vertical-align:1px;
   }
+  .note.pending .note-nick::after{content:'반영 중';}
+  .note.failed .note-nick::after{content:'전송 실패';background:rgba(192,57,43,.16);}
   /* pastel 5 */
   .c-butter{--paper:#ffeaa6;--paper2:#ffdf85;--note-ink:#4a3a10;}
   .c-blush{--paper:#ffd3de;--paper2:#ffc0d0;--note-ink:#5c2436;}
@@ -443,14 +445,15 @@
           <button type="button" class="th" data-theme="light" aria-pressed="false" title="감성 코르크 보드" aria-label="감성 코르크 보드로 보기">☀️</button>
           <button type="button" class="th" data-theme="dark" aria-pressed="false" title="어두운 무드 보드" aria-label="어두운 무드 보드로 보기">🌙</button>
         </div>
-        <button type="button" class="ghost" id="btnReset" title="샘플로 초기화" aria-label="내가 붙인 포스트잇 지우고 초기화">↺</button>
+        <button type="button" class="ghost" id="btnRefresh" title="방명록 새로고침" aria-label="방명록 새로고침">🔄</button>
+        <button type="button" class="ghost" id="btnReset" title="이 폰의 임시 포스트잇 비우기" aria-label="이 폰에 아직 반영 중인 포스트잇 비우기">🧹</button>
       </div>
     </div>
     <div class="titlerow">
       <h1>응원 보드</h1>
       <span class="badge" id="count" aria-live="polite">0장</span>
     </div>
-    <p class="lede">임재범 40주년, 마음을 한 장 붙여 주세요 💛 · 카드를 누르면 크게 볼 수 있어요</p>
+    <p class="lede">임재범 40주년, 마음을 한 장 붙여 주세요 💛 · 방명록에 남기면 모두의 보드에 함께 붙어요</p>
   </header>
 
   <div class="filters">
@@ -462,9 +465,9 @@
   </div>
 
   <main class="wall" id="wall" aria-label="응원 포스트잇 보드"></main>
-  <p class="empty" id="empty" hidden><b>조건에 맞는 포스트잇이 없어요</b>검색어를 지우거나 다른 색을 골라 보세요.</p>
+  <p class="empty" id="empty" hidden><b>아직 붙은 포스트잇이 없어요</b>첫 번째 응원을 남겨 보세요 ✨</p>
 
-  <footer class="foot" id="foot">이 보드는 지금 제 폰(브라우저)에 저장돼요 ✨<br>링크 하나로 모두가 함께 붙이는 공유 보드로 연결할 준비도 되어 있어요.</footer>
+  <footer class="foot" id="foot">방명록과 실시간으로 연동되어 모두에게 보여요 ✨</footer>
 </div>
 
 <button type="button" class="fab" id="fab"><span aria-hidden="true">📝</span> 포스트잇 붙이기</button>
@@ -526,28 +529,26 @@
 <script>
 /* =========================================================
    RU1ETHEWORLD 응원 보드
-   · 저장: localStorage(이 브라우저)  · 기본 샘플 4장
-   · 실시간 공유: 아래 SHARE 설정만 채우면 Google Forms/Sheets로 연동
+   · 읽기: Google Sheets gviz JSONP (브라우저 CORS 제약 없이 동작)
+   · 쓰기: Google Forms formResponse 로 no-cors POST
+   · 색상: 폼에 색상 칸이 없어 (닉네임+내용+시각) 해시로 파스텔 5색을 일관 배정
+           방금 내가 붙인 글만 고른 색을 이 폰에서 잠시 보여 줍니다.
+   · 샘플 포스트잇 없음: 오직 방명록(시트) 글 + 아직 반영 중인 내 글만 표시
    ========================================================= */
 (function () {
   'use strict';
 
-  /* ---------- 실시간 공유 연동 설정 (선택) ----------
-     지금은 비워 두었기 때문에 이 폰(브라우저)에만 저장됩니다.
-     아래 값을 채우면 자동으로 '모두의 보드'가 됩니다.
-       1) Google Forms '포스트잇 남기기' 설문지
-          → formAction: https://docs.google.com/forms/d/e/XXXX/formResponse
-          → entries: 각 질문의 entry 번호 (폼 HTML의 FB_PUBLIC_LOAD_DATA_에서 확인)
-       2) 응답이 쌓이는 Google Sheets
-          → sheetId: /spreadsheets/d/<여기>/... 값
-          → 시트 공유: '링크가 있는 모든 사람 보기'
-       시트 열 순서: 타임스탬프 | 닉네임 | 응원 한마디 | (색상 - 선택)
-       색상 칸이 없으면 닉네임/메시지로 색이 자동 배정됩니다. */
+  /* ---------- 실시간 공유 연동 (검증된 실제 엔드포인트) ----------
+     index.html 갤러리 방명록과 같은 Google Forms + Google Sheets를 함께 씁니다.
+       🦫닉네임    → entry.162665469
+       남길 말👀  → entry.675877610
+     이 폼에는 색상 질문이 없으므로 entries.color 는 비워 둡니다.
+     시트는 '링크가 있는 모든 사람 보기'로 공유되어 있어야 읽힙니다. */
   var SHARE = {
-    enabled: false,
-    sheetId: '',
-    formAction: '',
-    entries: { nick: '', msg: '', color: '' },
+    enabled: true,
+    sheetId: '15HaYcO4QoYNR13GpkLlX6aJ_tuJUy1Z8zrPkhdRAkEc',
+    formAction: 'https://docs.google.com/forms/d/e/1FAIpQLSc2E35rRKhUpvV5ORJp95KikQ98JqsoYXfoNVSIEy6ECQWStQ/formResponse',
+    entries: { nick: 'entry.162665469', msg: 'entry.675877610', color: '' },
     refreshSeconds: 45
   };
 
@@ -559,21 +560,14 @@
     { key: 'mint',     name: '민트',        hex: '#d2f2e1' }
   ];
 
-  /* 기본 샘플 — 임재범 40주년 / 30주년 응원 톤 */
-  var SAMPLES = [
-    { id: 's1', nick: 'Ru1e', color: 'butter', ts: new Date(2026, 10, 12, 21, 40).getTime(),
-      msg: '40년을 노래해 주셔서 고마워요. 오늘도 그 목소리에 하루가 버텨집니다 🎤' },
-    { id: 's2', nick: '고윤', color: 'blush', ts: new Date(2026, 10, 13, 9, 15).getTime(),
-      msg: '‘나는 임재범이다’ 무대, 3년 만에 다시 만나요. 끝까지 응원할게요 💗' },
-    { id: 's3', nick: '새벽감상', color: 'sky', ts: new Date(2026, 10, 13, 23, 2).getTime(),
-      msg: '30주년 무대를 아직도 기억해요. 40주년은 더 뜨거울 거라고 믿어요 🌊' },
-    { id: 's4', nick: 'Ru1eTheWorld', color: 'mint', ts: new Date(2026, 10, 14, 18, 20).getTime(),
-      msg: '우리 모두 RU1ETHEWORLD. 40주년, 함께 축하해요 ✨' }
-  ];
+  /* 시트 머리글(첫 행) — 데이터가 아니므로 건너뜁니다. */
+  var HEADER_NICK = '🦫닉네임';
+  var HEADER_MSG  = '남길 말👀';
 
-  var KEY_NOTES = 'ru1e.board.notes.v1';
-  var KEY_THEME = 'ru1e.board.theme.v1';
-  var KEY_NICK  = 'ru1e.board.nick.v1';
+  var KEY_PENDING = 'ru1e.board.pending.v1';
+  var KEY_MINE    = 'ru1e.board.mine.v1';
+  var KEY_THEME   = 'ru1e.board.theme.v1';
+  var KEY_NICK    = 'ru1e.board.nick.v1';
   var MAX_MSG = 120;
 
   var wall = document.getElementById('wall');
@@ -583,6 +577,7 @@
   var qEl = document.getElementById('q');
   var footEl = document.getElementById('foot');
   var toastEl = document.getElementById('toast');
+  var refreshBtn = document.getElementById('btnRefresh');
 
   var zoom = document.getElementById('zoom');
   var zoomPaper = document.getElementById('zoomPaper');
@@ -602,13 +597,18 @@
   var counterEl = document.getElementById('counter');
   var sendEl = document.getElementById('send');
 
-  var userNotes = loadNotes();
-  var remoteNotes = [];
+  var pendingNotes = loadPending();   /* 내가 방금 붙여 시트 반영을 기다리는 글 */
+  var remoteNotes = [];               /* 시트에서 읽어온 글 */
+  var myKeys = loadMine();            /* 내가 남긴 글 키 — 시트에서 내 글을 표시 */
   var filterColor = 'all';
   var query = '';
   var draftColor = 'butter';
   var zoomId = null;
   var toastTimer = 0;
+  var refreshing = false;
+  var lastSync = null;                /* null: 아직 / true: 성공 / false: 실패 */
+  var pollTimer = 0;
+  var retryTimer = 0;
 
   /* ---------------- 유틸 ---------------- */
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
@@ -633,35 +633,82 @@
     for (var i = 0; i < COLORS.length; i++) { if (COLORS[i].key === key) return COLORS[i]; }
     return COLORS[0];
   }
+  function normNick(s) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim(); }
+  function normMsg(s) { return String(s == null ? '' : s).trim(); }
+  function keyOf(nick, msg) { return normNick(nick) + '\u0001' + normMsg(msg); }
+  function colorForKey(key, rawTs) {
+    return COLORS[hash(key + '|' + (rawTs || '')) % COLORS.length].key;
+  }
   function validNote(n) {
     return n && typeof n.msg === 'string' && n.msg.trim() !== '' &&
       typeof n.ts === 'number' && colorOf(n.color).key === n.color;
   }
 
-  function loadNotes() {
+  /* ---------------- 저장 ---------------- */
+  function loadPending() {
     try {
-      var raw = localStorage.getItem(KEY_NOTES);
+      var raw = localStorage.getItem(KEY_PENDING);
       if (!raw) return [];
       var arr = JSON.parse(raw);
       if (!Array.isArray(arr)) return [];
-      return arr.filter(validNote);
+      return arr.filter(validNote).map(function (n) {
+        n.key = n.key || keyOf(n.nick, n.msg);
+        n.mine = true;
+        n.pending = !n.failed;
+        return n;
+      });
     } catch (e) { return []; }
   }
-  function saveNotes() {
-    try { localStorage.setItem(KEY_NOTES, JSON.stringify(userNotes)); } catch (e) {}
+  function savePending() {
+    try { localStorage.setItem(KEY_PENDING, JSON.stringify(pendingNotes)); } catch (e) {}
+  }
+  function loadMine() {
+    var map = {};
+    try {
+      var arr = JSON.parse(localStorage.getItem(KEY_MINE) || '[]');
+      if (Array.isArray(arr)) { for (var i = 0; i < arr.length; i++) map[String(arr[i])] = true; }
+    } catch (e) {}
+    return map;
+  }
+  function saveMine() {
+    var keys = [];
+    for (var k in myKeys) { if (Object.prototype.hasOwnProperty.call(myKeys, k)) keys.push(k); }
+    if (keys.length > 300) keys = keys.slice(keys.length - 300);
+    try { localStorage.setItem(KEY_MINE, JSON.stringify(keys)); } catch (e) {}
   }
 
   function toast(text) {
     toastEl.textContent = text;
     toastEl.classList.add('on');
     if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toastEl.classList.remove('on'); }, 2100);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('on'); }, 2400);
   }
 
-  /* ---------------- 렌더 ---------------- */
-  function allNotes() {
-    var list = userNotes.slice().concat(SAMPLES, remoteNotes);
-    list.sort(function (a, b) { return b.ts - a.ts; });
+  /* ---------------- 보드 글 모으기 ---------------- */
+  function boardNotes() {
+    var seen = {};
+    var list = [];
+    var i;
+    for (i = 0; i < remoteNotes.length; i++) {
+      var r = remoteNotes[i];
+      if (!r.key) r.key = keyOf(r.nick, r.msg);
+      if (seen[r.key]) continue;
+      seen[r.key] = true;
+      r.mine = !!myKeys[r.key];
+      list.push(r);
+    }
+    for (i = 0; i < pendingNotes.length; i++) {
+      var p = pendingNotes[i];
+      if (!p.key) p.key = keyOf(p.nick, p.msg);
+      if (seen[p.key]) continue;      /* 시트에 올라온 글은 시트 글만 보여 줍니다 */
+      seen[p.key] = true;
+      list.push(p);
+    }
+    list.sort(function (a, b) {
+      var at = a.ts || 0, bt = b.ts || 0;
+      if (bt !== at) return bt - at;
+      return String(b.id) < String(a.id) ? -1 : 1;
+    });
     return list;
   }
 
@@ -672,12 +719,43 @@
     return hay.indexOf(query) !== -1;
   }
 
+  /* ---------------- 렌더 ---------------- */
+  function emptyKind(hasAny) {
+    if (hasAny) return 'filter';
+    if (!remoteEnabled()) return 'none';
+    if (lastSync === false) return 'error';
+    if (lastSync === true) return 'none';
+    return 'loading';
+  }
+
+  function showEmpty(kind) {
+    var head = '아직 붙은 포스트잇이 없어요';
+    var body = '첫 번째 응원을 남겨 보세요 ✨';
+    if (kind === 'filter') {
+      head = '조건에 맞는 포스트잇이 없어요';
+      body = '검색어를 지우거나 다른 색을 골라 보세요.';
+    } else if (kind === 'loading') {
+      head = '방명록을 불러오는 중이에요';
+      body = '잠시만 기다려 주세요 ⏳';
+    } else if (kind === 'error') {
+      head = '방명록을 불러오지 못했어요';
+      body = '네트워크를 확인하고 오른쪽 위 🔄 를 눌러 다시 시도해 주세요.';
+    }
+    while (emptyEl.firstChild) emptyEl.removeChild(emptyEl.firstChild);
+    var b = document.createElement('b');
+    b.textContent = head;
+    emptyEl.appendChild(b);
+    emptyEl.appendChild(document.createTextNode(body));
+  }
+
   function makeNote(n, opts) {
     var isPrev = !!(opts && opts.preview);
     var el = document.createElement('article');
     el.className = 'note c-' + n.color;
-    el.style.setProperty('--tilt', (((hash(n.id) % 51) - 25) / 10).toFixed(1) + 'deg');
     if (n.mine) el.classList.add('mine');
+    if (n.pending) el.classList.add('pending');
+    if (n.failed) el.classList.add('failed');
+    el.style.setProperty('--tilt', (((hash(n.id) % 51) - 25) / 10).toFixed(1) + 'deg');
     el.setAttribute('data-id', n.id);
     if (!isPrev) {
       el.setAttribute('role', 'button');
@@ -702,29 +780,66 @@
 
     var date = document.createElement('span');
     date.className = 'note-date';
-    date.textContent = fmtShort(n.ts);
+    date.textContent = n.failed ? '전송 실패' : (n.ts ? fmtShort(n.ts) : '');
     el.appendChild(date);
     return el;
   }
 
   function render(freshId) {
-    var list = allNotes().filter(matches);
+    var all = boardNotes();
+    var list = [];
+    for (var i = 0; i < all.length; i++) { if (matches(all[i])) list.push(all[i]); }
+
     while (wall.firstChild) wall.removeChild(wall.firstChild);
     var frag = document.createDocumentFragment();
-    for (var i = 0; i < list.length; i++) frag.appendChild(makeNote(list[i]));
+    for (var j = 0; j < list.length; j++) frag.appendChild(makeNote(list[j]));
     wall.appendChild(frag);
 
-    emptyEl.hidden = list.length !== 0;
+    var total = all.length;
+    if (list.length) {
+      emptyEl.hidden = true;
+    } else {
+      emptyEl.hidden = false;
+      showEmpty(emptyKind(total > 0));
+    }
 
-    var total = allNotes().length;
     var filtered = (query !== '' || filterColor !== 'all');
     countEl.textContent = filtered ? (list.length + ' / ' + total + '장') : (total + '장');
-    countEl.title = filtered ? '보드 전체 ' + total + '장 중 ' + list.length + '장' : '총 ' + total + '장';
+    countEl.title = filtered ? '방명록 전체 ' + total + '장 중 ' + list.length + '장' : '방명록에 붙은 글 ' + total + '장';
 
     if (freshId) {
       var node = wall.querySelector('[data-id="' + freshId + '"]');
       if (node) node.classList.add('fresh');
     }
+  }
+
+  /* ---------------- 하단 안내 ---------------- */
+  function setFoot(line1, line2) {
+    while (footEl.firstChild) footEl.removeChild(footEl.firstChild);
+    footEl.appendChild(document.createTextNode(line1));
+    if (line2) {
+      footEl.appendChild(document.createElement('br'));
+      footEl.appendChild(document.createTextNode(line2));
+    }
+  }
+
+  function updateFoot() {
+    var line1 = '방명록과 실시간으로 연동되어 모두에게 보여요 ✨';
+    if (!remoteEnabled()) {
+      setFoot(line1, '방명록 연결이 꺼져 있어 이 브라우저에만 저장돼요.');
+      return;
+    }
+    var line2;
+    if (lastSync === false) {
+      line2 = '지금은 방명록을 불러오지 못했어요 · 오른쪽 위 🔄 로 다시 시도해 주세요.';
+    } else if (lastSync === true && !boardNotes().length) {
+      line2 = '아직 아무도 붙이지 않았어요 · 첫 번째 응원을 남겨 보세요!';
+    } else if (lastSync === null) {
+      line2 = '방명록을 불러오는 중이에요.';
+    } else {
+      line2 = '새 포스트잇은 ' + Math.max(20, SHARE.refreshSeconds) + '초마다 자동으로 다시 확인해요.';
+    }
+    setFoot(line1, line2);
   }
 
   /* ---------------- 필터 UI ---------------- */
@@ -782,17 +897,26 @@
   });
 
   /* ---------------- 카드 확대 ---------------- */
+  function findNote(id) {
+    var list = boardNotes();
+    for (var i = 0; i < list.length; i++) { if (list[i].id === id) return list[i]; }
+    return null;
+  }
+
   function openZoom(id) {
-    var list = allNotes();
-    var note = null;
-    for (var i = 0; i < list.length; i++) { if (list[i].id === id) note = list[i]; }
+    var note = findNote(id);
     if (!note) return;
     zoomId = id;
     zoomNick.textContent = note.nick;
     zoomMsg.textContent = note.msg;
-    zoomDate.textContent = fmtFull(note.ts) + (note.mine ? ' · 내가 붙인 포스트잇' : '');
+    var bits = [];
+    if (note.ts) bits.push(fmtFull(note.ts));
+    if (note.failed) bits.push('방명록 전송 실패');
+    else if (note.pending) bits.push('방명록에 반영 중');
+    else if (note.mine) bits.push('내가 붙인 포스트잇');
+    zoomDate.textContent = bits.join(' · ');
     zoomPaper.className = 'zoom-paper c-' + note.color;
-    zoomDel.hidden = !note.mine;
+    zoomDel.hidden = !note.pending;
     openOverlay(zoom);
     document.getElementById('zoomClose').focus({ preventScroll: true });
   }
@@ -818,15 +942,17 @@
   document.getElementById('zoomOk').addEventListener('click', closeZoom);
   zoom.addEventListener('click', function (e) { if (e.target === zoom) closeZoom(); });
 
+  /* 이 폰에서 아직 방명록에 반영 중인 내 글만 뗄 수 있어요. */
   zoomDel.addEventListener('click', function () {
     if (!zoomId) return;
-    var before = userNotes.length;
-    userNotes = userNotes.filter(function (n) { return n.id !== zoomId; });
-    if (userNotes.length === before) return;
-    saveNotes();
+    var before = pendingNotes.length;
+    pendingNotes = pendingNotes.filter(function (n) { return n.id !== zoomId; });
+    if (pendingNotes.length === before) return;
+    savePending();
     closeZoom();
     render();
-    toast('포스트잇을 뗐어요');
+    updateFoot();
+    toast('이 폰에서 지웠어요 · 방명록에 이미 올라갔다면 다시 보일 수 있어요');
   });
 
   /* ---------------- 붙이기 시트 ---------------- */
@@ -870,7 +996,7 @@
   });
 
   function preview() {
-    var nick = nickEl.value.trim() || '익명의 팬';
+    var nick = normNick(nickEl.value) || '익명의 팬';
     var msg = msgEl.value.trim();
     prevNick.textContent = nick;
     prevMsg.textContent = msg || '응원 한마디가 여기에 미리 보여요';
@@ -914,17 +1040,19 @@
     }
     if (msg.length > MAX_MSG) { toast('조금만 줄여 주세요 (최대 ' + MAX_MSG + '자)'); return; }
 
-    var nick = nickEl.value.trim().slice(0, 14) || '익명의 팬';
+    var nick = normNick(nickEl.value).slice(0, 14) || '익명의 팬';
     var note = {
       id: 'u' + Date.now() + '-' + Math.floor(Math.random() * 900 + 100),
+      key: keyOf(nick, msg),
       nick: nick,
       msg: msg,
-      color: draftColor,
+      color: draftColor,       /* 고른 색은 이 폰에서만 먼저 보여 주는 임시 색 */
       ts: Date.now(),
-      mine: true
+      mine: true,
+      pending: true
     };
-    userNotes.unshift(note);
-    saveNotes();
+    pendingNotes.unshift(note);
+    savePending();
     try { localStorage.setItem(KEY_NICK, nick); } catch (e) {}
 
     msgEl.value = '';
@@ -936,22 +1064,39 @@
     filterColor = 'all'; syncChips();
     render(note.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    toast('보드에 톡 붙였어요 ✨');
 
-    /* 공유 보드가 켜져 있으면 폼으로도 전송 */
-    if (remoteEnabled()) {
-      postRemote(note).then(function () {
-        toast('모두의 보드에도 붙였어요 ✨');
-        refreshRemote(true);
-      }).catch(function () {
-        toast('이 폰에는 저장했어요 · 공유 전송은 나중에 다시 시도할게요');
-      });
+    if (!remoteEnabled()) {
+      toast('보드에 톡 붙였어요 ✨');
+      return;
     }
+
+    myKeys[note.key] = true;
+    saveMine();
+    toast('방명록에 붙이는 중이에요…');
+
+    postRemote(note).then(function () {
+      toast('붙였어요 ✨ 방명록에 반영되는지 확인할게요');
+      scheduleSync(2400, 0);
+    }).catch(function () {
+      markFailed(note.id);
+      toast('방명록 전송에 실패했어요 · 잠시 뒤 다시 붙여 주세요');
+    });
   }
   sendEl.addEventListener('click', submitNote);
   msgEl.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submitNote(); }
   });
+
+  function markFailed(id) {
+    for (var i = 0; i < pendingNotes.length; i++) {
+      if (pendingNotes[i].id === id) {
+        pendingNotes[i].pending = false;
+        pendingNotes[i].failed = true;
+      }
+    }
+    savePending();
+    render();
+  }
 
   /* ---------------- 테마 ---------------- */
   var themeBtns = document.querySelectorAll('.theme .th');
@@ -973,38 +1118,44 @@
     });
   }
 
-  /* ---------------- 초기화 ---------------- */
+  /* ---------------- 내 임시 글 비우기 ---------------- */
   document.getElementById('btnReset').addEventListener('click', function () {
-    if (!userNotes.length) { toast('이미 샘플 포스트잇만 있어요'); return; }
-    var ok = window.confirm('내가 붙인 포스트잇 ' + userNotes.length + '장을 지우고 샘플 4장으로 되돌릴까요?');
+    if (!pendingNotes.length) { toast('이 폰에 임시로 남은 글이 없어요'); return; }
+    var ok = window.confirm('이 폰에 아직 반영 중인 포스트잇 ' + pendingNotes.length + '장을 지울까요?\n(방명록에 이미 올라간 글은 지워지지 않아요)');
     if (!ok) return;
-    userNotes = [];
-    saveNotes();
+    pendingNotes = [];
+    savePending();
     query = ''; qEl.value = '';
     filterColor = 'all'; syncChips();
     render();
-    toast('샘플 포스트잇으로 되돌렸어요');
+    updateFoot();
+    toast('이 폰의 임시 포스트잇을 지웠어요');
   });
 
-  /* ---------------- 공유(Google Forms + Sheets) ---------------- */
+  /* ---------------- 방명록(Google Sheets) 읽기 / Forms 쓰기 ---------------- */
   function remoteEnabled() {
-    return !!(SHARE.enabled && SHARE.sheetId && SHARE.formAction);
+    return !!(SHARE.enabled && SHARE.sheetId);
   }
 
   function parseSheetTs(raw) {
     var s = String(raw == null ? '' : raw).trim();
-    if (!s) return Date.now();
-    var m = /^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+))?/.exec(s);
-    if (m) return new Date(+m[1], +m[2], +m[3], +(m[4] || 0), +(m[5] || 0)).getTime();
-    m = /(\d{4})[.\-\/]\s*(\d{1,2})[.\-\/]\s*(\d{1,2})/.exec(s);
+    if (!s) return 0;
+    var m = /^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+))?(?:,(\d+))?/.exec(s);
+    if (m) return new Date(+m[1], +m[2], +m[3], +(m[4] || 0), +(m[5] || 0), +(m[6] || 0)).getTime();
+    m = /(\d{4})\s*[.\-\/]\s*(\d{1,2})\s*[.\-\/]\s*(\d{1,2})\.?\s*(?:(오전|오후|AM|PM)\s*)?(\d{1,2}):(\d{2})(?::(\d{2}))?/.exec(s);
     if (m) {
-      var hh = 0, mi = 0;
-      var tm = /(\d{1,2}):(\d{2})/.exec(s);
-      if (tm) { hh = +tm[1]; mi = +tm[2]; }
-      return new Date(+m[1], +m[2] - 1, +m[3], hh, mi).getTime();
+      var h = +m[5];
+      var ap = m[4] || '';
+      if ((ap === '오후' || ap === 'PM') && h < 12) h += 12;
+      if ((ap === '오전' || ap === 'AM') && h === 12) h = 0;
+      return new Date(+m[1], +m[2] - 1, +m[3], h, +m[6], +(m[7] || 0)).getTime();
     }
+    m = /(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/.exec(s);
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)).getTime();
+    m = /(\d{4})\s*[.\-\/]\s*(\d{1,2})\s*[.\-\/]\s*(\d{1,2})/.exec(s);
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3]).getTime();
     var d = new Date(s);
-    return isNaN(d.getTime()) ? Date.now() : d.getTime();
+    return isNaN(d.getTime()) ? 0 : d.getTime();
   }
 
   function parseSheetRows(payload) {
@@ -1014,13 +1165,27 @@
       var cells = (rows[i] && rows[i].c) || [];
       var vals = [];
       for (var j = 0; j < cells.length; j++) {
-        vals.push(cells[j] && cells[j].v != null ? String(cells[j].v).trim() : '');
+        var cell = cells[j];
+        var v = null;
+        if (cell) { v = cell.v != null ? cell.v : (cell.f != null ? cell.f : null); }
+        vals.push(v == null ? '' : String(v).trim());
       }
-      var ts = vals[0] || '', nick = vals[1] || '', msg = vals[2] || '', color = vals[3] || '';
+      var rawTs = vals[0] || '';
+      var nick = normNick(vals[1]);
+      var msg = normMsg(vals[2]);
       if (!nick && !msg) continue;
-      if (msg === '응원 한마디' || nick === '닉네임') continue; /* 머리글 행 */
-      var ck = colorOf(color).key === color ? color : COLORS[hash(nick + msg) % COLORS.length].key;
-      out.push({ id: 'r' + i, nick: nick || '익명의 팬', msg: msg, color: ck, ts: parseSheetTs(ts), remote: true });
+      if (nick === HEADER_NICK || msg === HEADER_MSG) continue;      /* 머리글 행 */
+      if (nick === '닉네임' || msg === '응원 한마디') continue;       /* 다른 시트용 머리글 */
+      var key = keyOf(nick, msg);
+      out.push({
+        id: 'r' + (hash(key + '|' + rawTs) % 1000000000) + '-' + i,
+        key: key,
+        nick: nick || '익명의 팬',
+        msg: msg,
+        color: colorForKey(key, rawTs),
+        ts: parseSheetTs(rawTs),
+        remote: true
+      });
     }
     return out;
   }
@@ -1042,7 +1207,9 @@
       window[cb] = function (payload) {
         if (settled) return;
         settled = true; cleanup();
-        resolve(parseSheetRows(payload));
+        var items;
+        try { items = parseSheetRows(payload); } catch (err) { reject(err); return; }
+        resolve(items);
       };
       script.onerror = function () {
         if (settled) return;
@@ -1054,40 +1221,110 @@
       }, 12000);
       script.async = true;
       script.src = 'https://docs.google.com/spreadsheets/d/' + SHARE.sheetId +
-        '/gviz/tq?tqx=out:json;responseHandler:' + cb;
+        '/gviz/tq?tqx=out:json;responseHandler:' + cb + '&_=' + Date.now();
       document.head.appendChild(script);
     });
   }
 
   function postRemote(note) {
     return new Promise(function (resolve, reject) {
-      if (!remoteEnabled()) { resolve(); return; }
-      var body = new FormData();
+      if (!remoteEnabled() || !SHARE.formAction) { resolve(); return; }
+      var body = new URLSearchParams();
       if (SHARE.entries.nick) body.append(SHARE.entries.nick, note.nick);
       if (SHARE.entries.msg) body.append(SHARE.entries.msg, note.msg);
       if (SHARE.entries.color) body.append(SHARE.entries.color, note.color);
-      fetch(SHARE.formAction, { method: 'POST', body: body, mode: 'no-cors' })
-        .then(function () { resolve(); })
-        .catch(reject);
+      try {
+        fetch(SHARE.formAction, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+          body: body.toString(),
+          keepalive: true
+        }).then(function () { resolve(); }).catch(reject);
+      } catch (err) { reject(err); }
     });
+  }
+
+  /* 시트에 올라온 내 글은 대기 목록에서 정리 */
+  function dropSynced() {
+    if (!pendingNotes.length) return;
+    var synced = {};
+    for (var i = 0; i < remoteNotes.length; i++) synced[remoteNotes[i].key] = true;
+    var keep = [];
+    for (var j = 0; j < pendingNotes.length; j++) {
+      if (!synced[pendingNotes[j].key]) keep.push(pendingNotes[j]);
+    }
+    if (keep.length !== pendingNotes.length) {
+      pendingNotes = keep;
+      savePending();
+    }
+  }
+
+  function applyRemote(items) {
+    remoteNotes = items;
+    dropSynced();
+    lastSync = true;
+    render();
+    updateFoot();
   }
 
   function refreshRemote(quiet) {
-    if (!remoteEnabled()) return;
-    fetchRemote().then(function (items) {
-      remoteNotes = items;
-      render();
+    if (!remoteEnabled()) { lastSync = true; render(); updateFoot(); return Promise.resolve(false); }
+    if (refreshing) return Promise.resolve(false);
+    refreshing = true;
+    if (!quiet) toast('방명록을 새로 불러오는 중이에요…');
+    render();
+    updateFoot();
+    return fetchRemote().then(function (items) {
+      refreshing = false;
+      applyRemote(items);
+      if (!quiet) {
+        toast(items.length ? '최신 방명록으로 새로고침했어요 ✨' : '아직 붙은 포스트잇이 없어요');
+      }
+      return true;
     }).catch(function () {
-      if (!quiet) footEl.innerHTML = '공유 보드를 불러오지 못했어요. 잠시 뒤 다시 시도할게요.';
+      refreshing = false;
+      lastSync = false;
+      render();
+      updateFoot();
+      if (!quiet) toast('방명록을 불러오지 못했어요 · 잠시 뒤 다시 시도해 주세요');
+      return false;
     });
   }
 
-  function startRemote() {
-    if (!remoteEnabled()) return;
-    footEl.innerHTML = '모두와 함께 붙이는 공유 보드예요 ✨<br>새 포스트잇을 자주 확인하고 있어요.';
-    refreshRemote(true);
-    setInterval(function () { refreshRemote(true); }, Math.max(20, SHARE.refreshSeconds) * 1000);
+  function scheduleSync(delay, tries) {
+    var n = tries || 0;
+    if (retryTimer) clearTimeout(retryTimer);
+    retryTimer = setTimeout(function () {
+      refreshRemote(true).then(function (ok) {
+        if (pendingNotes.length && ok && n < 5) { scheduleSync(4000, n + 1); }
+      });
+    }, delay);
   }
+
+  function startRemote() {
+    updateFoot();
+    if (!remoteEnabled()) { lastSync = true; render(); updateFoot(); return; }
+    refreshRemote(true);
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(function () {
+      if (document.hidden) return;
+      refreshRemote(true);
+    }, Math.max(20, SHARE.refreshSeconds) * 1000);
+  }
+
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', function () { refreshRemote(false); });
+  }
+
+  var lastVisible = Date.now();
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && remoteEnabled()) {
+      var stamp = Date.now();
+      if (stamp - lastVisible > 60000) refreshRemote(true);
+      lastVisible = stamp;
+    }
+  });
 
   /* ---------------- 오버레이 공통 ---------------- */
   var openStack = [];
