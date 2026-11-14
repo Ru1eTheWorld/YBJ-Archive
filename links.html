@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#08070a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Ru1eTheWorld · 링크 허브</title>
+<meta name="description" content="임재범 40주년 디지털 아카이브 · 팬 기록 보관소">
+<link rel="canonical" href="https://ru1etheworld.github.io/YBJ-Archive/links.html">
+<style>
+  /* =========================================================
+     RU1ETHEWORLD — LINK HUB
+     단일 파일 · 외부 리소스 0개 · iPhone Safari 기준
+     ========================================================= */
+  *,*::before,*::after{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  html,body{min-height:100%;}
+
+  :root{
+    --bg:#08070a;
+    --bg-2:#0c0a10;
+    --ink:#f3ece0;
+    --ink-dim:rgba(243,236,224,.60);
+    --ink-faint:rgba(243,236,224,.38);
+    --gold:#d8b56a;
+    --gold-hi:#f6e6bd;
+    --gold-soft:rgba(216,181,106,.34);
+    --gold-line:rgba(216,181,106,.26);
+    --glass:rgba(255,255,255,.055);
+    --glass-2:rgba(255,255,255,.085);
+    --glass-line:rgba(255,255,255,.11);
+    --shadow:0 22px 46px -26px rgba(0,0,0,.95);
+    --shadow-soft:0 10px 24px -18px rgba(0,0,0,.9);
+    --ring:rgba(216,181,106,.55);
+    --hair:linear-gradient(90deg,transparent,var(--gold-soft),transparent);
+    --radius:20px;
+    color-scheme:dark;
+  }
+  html[data-theme="light"]{
+    --bg:#f7f1e7;
+    --bg-2:#efe5d4;
+    --ink:#241f18;
+    --ink-dim:rgba(36,31,24,.62);
+    --ink-faint:rgba(36,31,24,.40);
+    --gold:#a17b33;
+    --gold-hi:#8a6626;
+    --gold-soft:rgba(161,123,51,.32);
+    --gold-line:rgba(140,104,42,.24);
+    --glass:rgba(255,255,255,.62);
+    --glass-2:rgba(255,255,255,.86);
+    --glass-line:rgba(120,92,44,.16);
+    --shadow:0 20px 40px -26px rgba(88,64,26,.55);
+    --shadow-soft:0 8px 20px -16px rgba(88,64,26,.5);
+    --ring:rgba(161,123,51,.45);
+    color-scheme:light;
+  }
+
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    -webkit-font-smoothing:antialiased;
+    -webkit-tap-highlight-color:transparent;
+    overscroll-behavior-y:none;
+    transition:background .5s ease,color .4s ease;
+  }
+  html[data-theme="light"] body{background:var(--bg-2);}
+
+  /* ── 조명 · 질감 (외부 이미지 없이 CSS만) ─────────────── */
+  .aura{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+  .aura::before{
+    content:"";position:absolute;left:50%;top:-34vh;width:150vw;height:76vh;
+    transform:translateX(-50%);
+    background:radial-gradient(closest-side,rgba(216,181,106,.22),rgba(216,181,106,0) 72%);
+  }
+  .aura::after{
+    content:"";position:absolute;left:50%;bottom:-30vh;width:140vw;height:60vh;
+    transform:translateX(-50%);
+    background:radial-gradient(closest-side,rgba(108,86,206,.20),rgba(108,86,206,0) 74%);
+  }
+  .aura i{
+    position:absolute;inset:0;
+    background:
+      repeating-linear-gradient(0deg,rgba(255,255,255,.016) 0 1px,transparent 1px 3px),
+      radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.05),transparent 58%),
+      radial-gradient(140% 100% at 50% 120%,rgba(0,0,0,.5),transparent 62%);
+  }
+  html[data-theme="light"] .aura::before{background:radial-gradient(closest-side,rgba(216,181,106,.55),rgba(216,181,106,0) 72%);}
+  html[data-theme="light"] .aura::after{background:radial-gradient(closest-side,rgba(146,126,228,.28),rgba(146,126,228,0) 74%);}
+  html[data-theme="light"] .aura i{
+    background:
+      radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.7),transparent 60%),
+      radial-gradient(140% 100% at 50% 120%,rgba(150,118,60,.16),transparent 62%);
+  }
+
+  /* ── 레이아웃 ─────────────────────────────────────────── */
+  .hub{
+    position:relative;z-index:1;
+    width:100%;max-width:520px;margin:0 auto;
+    padding:calc(10px + env(safe-area-inset-top)) 20px calc(26px + env(safe-area-inset-bottom));
+    min-height:100vh;min-height:100svh;
+    display:flex;flex-direction:column;
+  }
+
+  /* 상단: 브랜드 태그 + 테마 토글 */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 2px 0;}
+  .brand-tag{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:9.5px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--gold);opacity:.9;white-space:nowrap;
+  }
+  .brand-tag::before{
+    content:"";width:16px;height:1px;background:var(--gold);opacity:.6;
+  }
+  .icon-btn{
+    flex:0 0 auto;width:36px;height:36px;border-radius:50%;
+    display:grid;place-items:center;font-size:15px;line-height:1;
+    color:var(--ink);background:var(--glass);border:1px solid var(--glass-line);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    -webkit-appearance:none;appearance:none;cursor:pointer;
+    transition:transform .18s ease,background .3s ease,border-color .3s ease;
+  }
+  .icon-btn:active{transform:scale(.92);}
+  .icon-btn:focus-visible{outline:none;box-shadow:0 0 0 3px var(--ring);}
+
+  /* ── 프로필 ───────────────────────────────────────────── */
+  .profile{text-align:center;padding:30px 0 24px;}
+  .monogram{
+    position:relative;width:88px;height:88px;margin:0 auto 16px;border-radius:50%;
+    display:grid;place-items:center;
+    background:
+      radial-gradient(120% 120% at 30% 18%,rgba(255,255,255,.16),transparent 60%),
+      linear-gradient(160deg,rgba(216,181,106,.20),rgba(216,181,106,.03) 60%);
+    box-shadow:
+      0 0 0 1px var(--gold-soft),
+      0 0 0 6px rgba(216,181,106,.06),
+      0 20px 44px -22px rgba(216,181,106,.55),
+      inset 0 1px 0 rgba(255,255,255,.14);
+  }
+  .monogram::after{
+    content:"";position:absolute;inset:-1px;border-radius:50%;
+    background:conic-gradient(from 210deg,transparent,rgba(246,230,189,.85),transparent 42%,transparent 72%,rgba(246,230,189,.5),transparent);
+    -webkit-mask:radial-gradient(closest-side,transparent 93%,#000 94%);
+    mask:radial-gradient(closest-side,transparent 93%,#000 94%);
+    opacity:.85;animation:spin 11s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .monogram span{
+    font-family:"Didot","Bodoni 72","Times New Roman",Georgia,serif;
+    font-size:42px;line-height:1;font-weight:400;letter-spacing:.02em;
+    background:linear-gradient(160deg,var(--gold-hi),var(--gold) 52%,#8d6a2b 120%);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;color:var(--gold);
+    transform:translateY(1px);
+    filter:drop-shadow(0 1px 0 rgba(0,0,0,.35));
+  }
+  html[data-theme="light"] .monogram span{filter:none;}
+
+  h1{
+    margin:0 0 8px;font-size:23px;line-height:1.2;font-weight:700;
+    letter-spacing:-.02em;color:var(--ink);
+  }
+  h1 .at{color:var(--gold);font-weight:600;}
+  .tagline{
+    margin:0 auto;max-width:320px;
+    font-size:13px;line-height:1.6;letter-spacing:-.01em;color:var(--ink-dim);
+  }
+  .rule{
+    width:54px;height:1px;margin:18px auto 0;
+    background:var(--hair);
+  }
+
+  /* ── 링크 버튼 ────────────────────────────────────────── */
+  .links{display:flex;flex-direction:column;gap:12px;margin-top:6px;}
+  .link{
+    position:relative;display:flex;align-items:center;gap:14px;
+    padding:15px 16px;border-radius:var(--radius);
+    text-decoration:none;color:inherit;overflow:hidden;
+    background:
+      linear-gradient(150deg,rgba(255,255,255,.075),rgba(255,255,255,.025) 62%);
+    border:1px solid var(--glass-line);
+    box-shadow:var(--shadow-soft),inset 0 1px 0 rgba(255,255,255,.07);
+    -webkit-backdrop-filter:blur(16px) saturate(1.1);
+    backdrop-filter:blur(16px) saturate(1.1);
+    transition:transform .22s ease,border-color .28s ease,box-shadow .28s ease,background .28s ease;
+    opacity:0;transform:translateY(14px);
+    animation:rise .62s cubic-bezier(.22,.7,.24,1) forwards;
+  }
+  html[data-theme="light"] .link{
+    background:linear-gradient(150deg,rgba(255,255,255,.9),rgba(255,255,255,.62));
+    box-shadow:var(--shadow-soft),inset 0 1px 0 rgba(255,255,255,.9);
+  }
+  .link:nth-child(1){animation-delay:.10s;}
+  .link:nth-child(2){animation-delay:.18s;}
+  .link:nth-child(3){animation-delay:.26s;}
+  @keyframes rise{to{opacity:1;transform:translateY(0);}}
+
+  /* 좌측 골드 라인 — hover 시 길어짐 */
+  .link::before{
+    content:"";position:absolute;left:0;top:16%;bottom:16%;width:2px;border-radius:2px;
+    background:linear-gradient(180deg,var(--gold-hi),var(--gold));
+    transform:scaleY(0);transform-origin:50% 50%;
+    opacity:0;transition:transform .3s ease,opacity .3s ease;
+  }
+  /* 지나가는 광 */
+  .link::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(105deg,transparent 30%,rgba(246,230,189,.14) 46%,transparent 62%);
+    transform:translateX(-120%);transition:transform .75s ease;
+  }
+  @media (hover:hover){
+    .link:hover{transform:translateY(-2px);border-color:var(--gold-line);box-shadow:var(--shadow),0 0 0 1px rgba(216,181,106,.12);}
+    .link:hover::before{transform:scaleY(1);opacity:1;}
+    .link:hover::after{transform:translateX(120%);}
+    .link:hover .arrow{transform:translateX(3px);color:var(--gold);}
+    .link:hover .ico{border-color:var(--gold-line);}
+  }
+  .link:active{transform:scale(.985);}
+  .link:focus-visible{outline:none;box-shadow:0 0 0 3px var(--ring),var(--shadow-soft);}
+
+  .ico{
+    flex:0 0 auto;width:44px;height:44px;border-radius:13px;
+    display:grid;place-items:center;font-size:19px;line-height:1;
+    background:radial-gradient(120% 12% at 30% 20%,rgba(216,181,106,.22),rgba(216,181,106,.06));
+    border:1px solid var(--gold-line);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.10);
+    transition:border-color .28s ease;
+  }
+  .txt{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px;}
+  .txt b{
+    font-size:14.5px;line-height:1.3;font-weight:700;letter-spacing:-.015em;
+    display:flex;align-items:baseline;gap:6px;
+  }
+  .txt b .tag{
+    font-size:8.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--gold);opacity:.85;transform:translateY(-1px);
+  }
+  .txt em{
+    font-style:normal;font-size:11.8px;line-height:1.45;letter-spacing:-.01em;
+    color:var(--ink-dim);
+    overflow:hidden;text-overflow:ellipsis;display:-webkit-box;
+    -webkit-line-clamp:2;-webkit-box-orient:vertical;
+  }
+  .arrow{
+    flex:0 0 auto;font-size:19px;line-height:1;color:var(--ink-faint);
+    transition:transform .25s ease,color .25s ease;
+  }
+
+  /* ── 공유 / 하단 ──────────────────────────────────────── */
+  .actions{margin-top:22px;display:flex;gap:10px;}
+  .share{
+    flex:1 1 auto;position:relative;
+    display:inline-flex;align-items:center;justify-content:center;gap:9px;
+    padding:14px 18px;border-radius:999px;
+    font-family:inherit;font-size:13px;font-weight:800;letter-spacing:-.01em;
+    color:#171208;
+    background:linear-gradient(160deg,var(--gold-hi),var(--gold) 52%,#b58e45 110%);
+    border:1px solid rgba(246,230,189,.5);
+    box-shadow:0 14px 30px -16px rgba(216,181,106,.75),inset 0 1px 0 rgba(255,255,255,.4);
+    -webkit-appearance:none;appearance:none;cursor:pointer;
+    transition:transform .18s ease,box-shadow .28s ease,filter .28s ease;
+  }
+  html[data-theme="light"] .share{color:#fffaf0;}
+  .share:active{transform:scale(.97);}
+  .share:focus-visible{outline:none;box-shadow:0 0 0 3px var(--ring),0 14px 30px -16px rgba(216,181,106,.75);}
+  @media (hover:hover){.share:hover{filter:brightness(1.06);}}
+  .share span[aria-hidden]{font-size:14px;line-height:1;}
+
+  .foot{
+    margin-top:auto;padding-top:26px;text-align:center;
+    font-size:10px;line-height:1.8;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-faint);
+  }
+  .foot .dot{
+    display:inline-block;width:3px;height:3px;margin:0 8px;border-radius:50%;
+    background:var(--gold);opacity:.7;vertical-align:middle;
+  }
+
+  /* ── 토스트 ───────────────────────────────────────────── */
+  .toast{
+    position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));
+    transform:translate(-50%,14px);
+    z-index:50;padding:11px 18px;border-radius:999px;
+    font-size:12px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;
+    max-width:calc(100vw - 40px);
+    color:var(--ink);background:var(--glass-2);
+    border:1px solid var(--gold-line);
+    -webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2);
+    box-shadow:0 16px 34px -18px rgba(0,0,0,.8);
+    opacity:0;pointer-events:none;
+    transition:opacity .26s ease,transform .26s ease;
+  }
+  .toast.on{opacity:1;transform:translate(-50%,0);}
+
+  @media (min-width:560px){
+    .hub{padding-left:26px;padding-right:26px;}
+    .profile{padding:42px 0 30px;}
+    .monogram{width:96px;height:96px;}
+    .monogram span{font-size:46px;}
+    h1{font-size:26px;}
+    .tagline{font-size:13.5px;}
+    .txt b{font-size:15.2px;}
+    .txt em{font-size:12.2px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{
+      animation-duration:.001ms !important;animation-delay:0ms !important;
+      transition-duration:.001ms !important;
+    }
+    .link{opacity:1;transform:none;}
+  }
+</style>
+</head>
+<body>
+<div class="aura" aria-hidden="true"><i></i></div>
+
+<main class="hub">
+  <div class="topbar">
+    <span class="brand-tag">YIM JAE BEUM · 40TH</span>
+    <button class="icon-btn" id="themeBtn" type="button" aria-label="밝기 전환" title="밝기 전환">☀️</button>
+  </div>
+
+  <header class="profile">
+    <div class="monogram" aria-hidden="true"><span>R</span></div>
+    <h1><span class="at">@</span>Ru1eTheWorld</h1>
+    <p class="tagline">임재범 40주년 디지털 아카이브 · 팬 기록 보관소</p>
+    <div class="rule" aria-hidden="true"></div>
+  </header>
+
+  <nav class="links" aria-label="아카이브 링크">
+    <a class="link" href="./photocard.html">
+      <span class="ico" aria-hidden="true">✨</span>
+      <span class="txt">
+        <b>3D 홀로그램 포토카드</b>
+        <em>기울이고 뒤집어 보는 2026.03.28 창원 포카</em>
+      </span>
+      <span class="arrow" aria-hidden="true">›</span>
+    </a>
+
+    <a class="link" href="./index.html">
+      <span class="ico" aria-hidden="true">🏛️</span>
+      <span class="txt">
+        <b>3D 팬 전시관 <span class="tag">Gallery</span></b>
+        <em>콘서트 직찍·영상과 방명록이 있는 3D 전시장</em>
+      </span>
+      <span class="arrow" aria-hidden="true">›</span>
+    </a>
+
+    <a class="link" href="./board.html">
+      <span class="ico" aria-hidden="true">🗒️</span>
+      <span class="txt">
+        <b>포스트잇 응원 보드</b>
+        <em>임재범 40주년을 응원하는 한마디 남기기</em>
+      </span>
+      <span class="arrow" aria-hidden="true">›</span>
+    </a>
+  </nav>
+
+  <div class="actions">
+    <button class="share" id="shareBtn" type="button">
+      <span aria-hidden="true">🔗</span> 공유하기
+    </button>
+  </div>
+
+  <footer class="foot">
+    Ru1eTheWorld<span class="dot" aria-hidden="true"></span>40th Anniversary Archive
+  </footer>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var ROOT = document.documentElement;
+  var KEY_THEME = 'ru1e.links.theme.v1';
+  var SHARE_URL = 'https://ru1etheworld.github.io/YBJ-Archive/links.html';
+  var SHARE_TITLE = 'Ru1eTheWorld · 임재범 40주년 아카이브';
+  var SHARE_TEXT = '임재범 40주년 디지털 아카이브 · 팬 기록 보관소';
+
+  var themeBtn = document.getElementById('themeBtn');
+  var shareBtn = document.getElementById('shareBtn');
+  var toastEl = document.getElementById('toast');
+  var metaTheme = document.querySelector('meta[name="theme-color"]');
+  var toastTimer = null;
+
+  function safeGet(key) {
+    try { return window.localStorage.getItem(key); } catch (e) { return null; }
+  }
+  function safeSet(key, value) {
+    try { window.localStorage.setItem(key, value); } catch (e) { /* 사파리 프라이빗 모드 */ }
+  }
+
+  /* ── 테마 ─────────────────────────────────────────────── */
+  function paintTheme(theme) {
+    var light = theme === 'light';
+    ROOT.setAttribute('data-theme', light ? 'light' : 'dark');
+    if (themeBtn) {
+      themeBtn.textContent = light ? '🌙' : '☀️';
+      themeBtn.setAttribute('aria-label', light ? '어두운 모드로 보기' : '밝은 모드로 보기');
+      themeBtn.setAttribute('title', light ? '어두운 모드로 보기' : '밝은 모드로 보기');
+    }
+    if (metaTheme) {
+      metaTheme.setAttribute('content', light ? '#f7f1e7' : '#08070a');
+    }
+  }
+
+  function initTheme() {
+    var saved = safeGet(KEY_THEME);
+    if (saved === 'light' || saved === 'dark') {
+      paintTheme(saved);
+      return;
+    }
+    var preferLight = false;
+    if (window.matchMedia) {
+      preferLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    }
+    paintTheme(preferLight ? 'light' : 'dark');
+  }
+
+  function toggleTheme() {
+    var next = ROOT.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    paintTheme(next);
+    safeSet(KEY_THEME, next);
+  }
+
+  /* ── 토스트 ───────────────────────────────────────────── */
+  function showToast(message) {
+    if (!toastEl) { return; }
+    toastEl.textContent = message;
+    toastEl.classList.add('on');
+    if (toastTimer) { window.clearTimeout(toastTimer); }
+    toastTimer = window.setTimeout(function () {
+      toastEl.classList.remove('on');
+      toastTimer = null;
+    }, 2100);
+  }
+
+  /* ── 링크 복사 (구형 사파리 폴백 포함) ────────────────── */
+  function copyFallback(text, done) {
+    var area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', 'readonly');
+    area.style.position = 'fixed';
+    area.style.top = '-1000px';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    var ok = false;
+    try {
+      area.select();
+      area.setSelectionRange(0, area.value.length);
+      ok = document.execCommand('copy');
+    } catch (e) {
+      ok = false;
+    }
+    document.body.removeChild(area);
+    done(ok);
+  }
+
+  function copyLink() {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(SHARE_URL).then(function () {
+        showToast('링크를 복사했어요 ✨');
+      }, function () {
+        copyFallback(SHARE_URL, function (ok) {
+          showToast(ok ? '링크를 복사했어요 ✨' : '주소창의 링크를 복사해 주세요');
+        });
+      });
+      return;
+    }
+    copyFallback(SHARE_URL, function (ok) {
+      showToast(ok ? '링크를 복사했어요 ✨' : '주소창의 링크를 복사해 주세요');
+    });
+  }
+
+  function share() {
+    if (navigator.share) {
+      navigator.share({
+        title: SHARE_TITLE,
+        text: SHARE_TEXT,
+        url: SHARE_URL
+      }).then(function () {
+        showToast('공유 창을 열었어요');
+      }, function (err) {
+        if (err && err.name === 'AbortError') { return; }
+        copyLink();
+      });
+      return;
+    }
+    copyLink();
+  }
+
+  /* ── 연결 ─────────────────────────────────────────────── */
+  initTheme();
+  if (themeBtn) { themeBtn.addEventListener('click', toggleTheme); }
+  if (shareBtn) { shareBtn.addEventListener('click', share); }
+})();
+</script>
+</body>
+</html>
