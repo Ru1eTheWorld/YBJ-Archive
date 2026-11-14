@@ -41,8 +41,8 @@
     color-scheme:dark;
   }
   html[data-theme="light"]{
-    --bg:#f7f1e7;
-    --bg-2:#efe5d4;
+    --bg:#f4ecdf;
+    --bg-2:#ece0cc;
     --ink:#241f18;
     --ink-dim:rgba(36,31,24,.62);
     --ink-faint:rgba(36,31,24,.40);
@@ -74,9 +74,9 @@
   /* ── 조명 · 질감 (외부 이미지 없이 CSS만) ─────────────── */
   .aura{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
   .aura::before{
-    content:"";position:absolute;left:50%;top:-34vh;width:150vw;height:76vh;
+    content:"";position:absolute;left:50%;top:-40vh;width:170vw;height:88vh;
     transform:translateX(-50%);
-    background:radial-gradient(closest-side,rgba(216,181,106,.22),rgba(216,181,106,0) 72%);
+    background:radial-gradient(closest-side,rgba(216,181,106,.15),rgba(216,181,106,.05) 46%,rgba(216,181,106,0) 76%);
   }
   .aura::after{
     content:"";position:absolute;left:50%;bottom:-30vh;width:140vw;height:60vh;
@@ -90,7 +90,7 @@
       radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.05),transparent 58%),
       radial-gradient(140% 100% at 50% 120%,rgba(0,0,0,.5),transparent 62%);
   }
-  html[data-theme="light"] .aura::before{background:radial-gradient(closest-side,rgba(216,181,106,.55),rgba(216,181,106,0) 72%);}
+  html[data-theme="light"] .aura::before{background:radial-gradient(closest-side,rgba(216,181,106,.40),rgba(216,181,106,.12) 48%,rgba(216,181,106,0) 78%);}
   html[data-theme="light"] .aura::after{background:radial-gradient(closest-side,rgba(146,126,228,.28),rgba(146,126,228,0) 74%);}
   html[data-theme="light"] .aura i{
     background:
@@ -413,15 +413,8 @@
 
   function initTheme() {
     var saved = safeGet(KEY_THEME);
-    if (saved === 'light' || saved === 'dark') {
-      paintTheme(saved);
-      return;
-    }
-    var preferLight = false;
-    if (window.matchMedia) {
-      preferLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-    }
-    paintTheme(preferLight ? 'light' : 'dark');
+    /* 첫 방문은 아카이브 시그니처인 다크 · 골드로, 이후에는 고른 모드를 기억한다 */
+    paintTheme(saved === 'light' ? 'light' : 'dark');
   }
 
   function toggleTheme() {
