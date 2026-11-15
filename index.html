@@ -260,6 +260,7 @@
     background:rgba(127,127,127,.14);display:grid;place-items:center;font-size:18px;color:var(--muted);
   }
   .drop .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .drop .thumb video{width:100%;height:100%;object-fit:cover;display:block;background:#000;}
   .drop .txt b{display:block;font-size:12.5px;letter-spacing:-.2px;}
   .drop .txt span{display:block;font-size:10.5px;color:var(--muted);margin-top:2px;}
   .chips{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;}
@@ -273,6 +274,15 @@
   .chip.on{background:var(--accent);color:var(--accent-fg);border-color:transparent;}
   .note{font-size:10.5px;color:var(--muted);line-height:1.55;margin:0;}
   .linkish{background:none;border:0;font:inherit;font-size:10.5px;color:var(--muted);text-decoration:underline;cursor:pointer;padding:0;align-self:flex-start;}
+
+  /* 벽 영상 재생 도우미 (자동재생이 막힌 기기에서만 표시) */
+  #videoKick{
+    position:fixed;z-index:19;left:50%;bottom:calc(104px + env(safe-area-inset-bottom));
+    transform:translateX(-50%);font:inherit;font-size:11px;font-weight:800;letter-spacing:-.2px;
+    color:var(--accent-fg);background:var(--accent);border:0;border-radius:999px;
+    padding:10px 16px;box-shadow:0 8px 22px rgba(0,0,0,.28);cursor:pointer;
+  }
+  #videoKick[hidden]{display:none;}
 
   /* toast */
   #toast{
@@ -411,6 +421,7 @@
 
 <div id="nearby"></div>
 <div id="hint"></div>
+<button type="button" id="videoKick" hidden aria-label="벽 영상 다시 재생">▶ 벽 영상 재생</button>
 
 <div id="stick" aria-hidden="true">
   <div class="stick-base" id="stickBase">
@@ -494,10 +505,10 @@
     <label class="drop" for="fileInput">
       <div class="thumb" id="thumb">🖼️</div>
       <div class="txt">
-        <b id="dropTitle">사진 선택하기</b>
-        <span>앨범에서 고르거나 카메라로 찍기 · JPG / PNG</span>
+        <b id="dropTitle">사진 / 영상 선택하기</b>
+        <span>앨범에서 고르기 · 사진 / 영상 모두 가능</span>
       </div>
-      <input type="file" id="fileInput" accept="image/*" hidden>
+      <input type="file" id="fileInput" accept="image/*,video/*" hidden>
     </label>
 
     <div class="field">
@@ -1087,22 +1098,22 @@ const VIDEO_SRC = (() => {
   return 'data:' + mime + ';base64,' + VIDEO_B64;
 })();
 
-let videoEl = null;
-let videoTex = null;   // 3D 벽 액자용 VideoTexture (iOS에서 프레임 갱신을 직접 밀어주기 위해 보관)
-function playFrameVideo() {
-  if (!videoEl) return;
-  if (!videoEl.paused && videoEl.readyState >= 2) return;
-  try {
-    const p = videoEl.play();
-    if (p && typeof p.catch === 'function') p.catch(() => {});
-  } catch (err) {}
-  // 재생이 시작되면 텍스처를 즉시 한 번 갱신
-  if (videoTex && videoEl.readyState >= 2) videoTex.needsUpdate = true;
-}
-function ensureFrameVideo() {
-  if (videoEl) return videoEl;
+/* ------------------------------------------ 3D 벽 영상 엔진 (iOS Safari 대응)
+   iOS Safari는 display:none·0x0·화면 밖 <video>의 디코딩을 멈춰 VideoTexture가 첫
+   프레임에 얼어붙는다. 그래서
+   ① 영상마다 전용 <video>를 DOM 안 2x2px·opacity .01·화면 안에 살려 두고,
+   ② muted+playsinline+loop 로 자동재생을 시도하며 로드 완료·첫 터치·탭 복귀마다 play()를 다시 부르고,
+   ③ 재생 중이면 매 프레임 tex.needsUpdate = true 로 텍스처를 직접 밀어 준다.
+   ④ 그래도 멈춰 있으면 렌더 루프 watchdog이 재시도하고, 계속 멈춰 있으면 '벽 영상 재생' 버튼을 띄운다. */
+const wallVideos = [];   // [{ el, tex, index, src, lastTime, stall, age, loads }]
+let videoEl = null;      // 8번 액자의 기본 영상 요소(모달·디버그 호환)
+let videoTex = null;
+let gestureSeen = false;
+let videoWatchT = 0;
+
+function makeWallVideoElement(src) {
   const v = document.createElement('video');
-  // iOS Safari 자동재생 조건: muted + playsinline + 화면에 렌더되는 요소(display:none 금지)
+  // iOS 자동재생 조건: muted + playsinline + 화면에 실제로 렌더되는 요소(display:none 금지)
   v.muted = true;
   v.defaultMuted = true;
   v.loop = true;
@@ -1113,28 +1124,140 @@ function ensureFrameVideo() {
   v.tabIndex = -1;
   ['muted', 'loop', 'autoplay', 'playsinline', 'webkit-playsinline', 'preload'].forEach((a) => v.setAttribute(a, ''));
   v.setAttribute('aria-hidden', 'true');
-  // iOS WebKit은 display:none / visibility:hidden / 뷰포트 밖 비디오의 디코딩을 멈춘다.
-  // 화면 안에 2px로 두고 0.01 투명도로만 숨겨 "보이는 요소"로 유지한다.
-  v.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1;';
-  document.body.appendChild(v);
-  v.src = VIDEO_SRC;
-  v.addEventListener('canplay', playFrameVideo);
-  v.addEventListener('loadeddata', playFrameVideo);
-  videoEl = v;
-  try { v.load(); } catch (err) {}
-  playFrameVideo();
-  // 입장 버튼·비밀번호 입력 등 사용자 제스처마다 한 번 더 재생을 시도
-  // (iOS는 첫 터치 전까지 play()를 거부할 수 있어 첫 제스처에서 반드시 재시도한다)
-  ['touchstart', 'pointerdown', 'click', 'touchend', 'keydown'].forEach((ev) => {
-    document.addEventListener(ev, playFrameVideo, { passive: true, capture: true });
-  });
-  // 잠금 해제 스크립트에서도 확실히 호출할 수 있게 노출
-  window.__galleryVideoKick = playFrameVideo;
-  // 화면으로 돌아왔을 때 사파리가 멈춰 둔 재생을 이어준다
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) playFrameVideo();
-  });
+  // 화면 안에 2px로 두고 0.01 투명도로만 숨겨 iOS가 "보이는 요소"로 계속 디코딩하게 만든다.
+  v.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1;';
+  (document.body || document.documentElement).appendChild(v);
+  if (src) v.src = src;
   return v;
+}
+function tryPlay(el) {
+  if (!el) return;
+  try {
+    const p = el.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+  } catch (err) {}
+}
+function pokeTexture(entry) {
+  if (entry && entry.tex && entry.el.readyState >= 2) entry.tex.needsUpdate = true;
+}
+// 영상 하나 = <video> 하나 + VideoTexture 하나. 액자(8번·내가 건 영상)마다 독립적으로 관리한다.
+function createVideoEntry(src, index) {
+  const el = makeWallVideoElement(src);
+  const tex = new THREE.VideoTexture(el);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = false;
+  tex.anisotropy = 1;
+  const entry = { el, tex, index, src, lastTime: -1, stall: 0, age: 0, loads: 0 };
+  wallVideos.push(entry);
+  ['loadeddata', 'canplay', 'playing', 'play'].forEach((ev) => {
+    el.addEventListener(ev, () => { pokeTexture(entry); tryPlay(el); });
+  });
+  try { el.load(); } catch (err) {}
+  tryPlay(el);
+  return entry;
+}
+function stopFrameVideo(index) {
+  for (let i = wallVideos.length - 1; i >= 0; i--) {
+    const entry = wallVideos[i];
+    if (entry.index !== index) continue;
+    try { entry.el.pause(); } catch (err) {}
+    try { entry.el.removeAttribute('src'); entry.el.load(); } catch (err) {}
+    if (entry.el.parentNode) entry.el.parentNode.removeChild(entry.el);
+    if (entry.tex && entry.tex.dispose) entry.tex.dispose();
+    wallVideos.splice(i, 1);
+    if (videoEl === entry.el) videoEl = null;
+    if (videoTex === entry.tex) videoTex = null;
+  }
+}
+function ensureFrameVideoEntry(index) {
+  const existing = wallVideos.find((e) => e.src === VIDEO_SRC && e.index === index);
+  const entry = existing || createVideoEntry(VIDEO_SRC, index);
+  videoEl = entry.el;
+  videoTex = entry.tex;
+  return entry;
+}
+function playFrameVideo() {
+  for (const entry of wallVideos) {
+    tryPlay(entry.el);
+    pokeTexture(entry);
+  }
+}
+function showVideoKick() {
+  const b = $('videoKick');
+  if (b && b.hidden) b.hidden = false;
+}
+function hideVideoKick() {
+  const b = $('videoKick');
+  if (b && !b.hidden) b.hidden = true;
+}
+// 사용자가 직접 누를 때: 멈춰 있는 영상만 확실히 다시 시작한다(재생 위치는 처음으로)
+function kickWallVideos(force) {
+  for (const entry of wallVideos) {
+    if (force && (entry.el.paused || entry.stall >= 2 || entry.el.readyState < 2)) {
+      entry.stall = 0;
+      entry.age = 0;
+      entry.loads += 1;
+      try { entry.el.load(); } catch (err) {}
+    }
+    tryPlay(entry.el);
+    pokeTexture(entry);
+  }
+  if (!force) hideVideoKick();
+}
+function watchWallVideos(dt) {
+  if (!wallVideos.length) { hideVideoKick(); return; }
+  videoWatchT += dt;
+  if (videoWatchT < 0.4) return;
+  const step = videoWatchT;
+  videoWatchT = 0;
+  let stuck = false;
+  let worst = 0;
+  for (const entry of wallVideos) {
+    const el = entry.el;
+    const before = entry.lastTime;
+    entry.lastTime = el.currentTime;
+    entry.age += step;
+    const moved = el.currentTime !== before;
+    if (el.readyState >= 2 && (el.paused || !moved)) { entry.stall += 1; stuck = true; }
+    else if (el.readyState < 2 && entry.age > 8) { entry.stall += 1; stuck = true; }
+    else entry.stall = 0;
+    if (entry.stall > worst) worst = entry.stall;
+    if (entry.stall === 3 || entry.stall === 8) tryPlay(el);
+    else if (entry.stall === 12 && entry.loads < 2) {
+      entry.loads += 1;
+      try { el.load(); } catch (err) {}
+      tryPlay(el);
+      entry.stall = 0;
+    }
+  }
+  if (stuck && worst >= 3 && gestureSeen && !document.hidden) showVideoKick();
+  else hideVideoKick();
+}
+
+// 첫 사용자 제스처·탭 복귀마다 벽 영상을 다시 재생한다(iOS는 제스처 없이는 play()를 거부한다)
+function markGesture() {
+  gestureSeen = true;
+  playFrameVideo();
+}
+['touchstart', 'pointerdown', 'click', 'touchend', 'keydown'].forEach((ev) => {
+  document.addEventListener(ev, markGesture, { passive: true, capture: true });
+});
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) { videoWatchT = 0; playFrameVideo(); }
+});
+window.addEventListener('pageshow', () => playFrameVideo());
+window.addEventListener('focus', () => playFrameVideo());
+// 잠금 해제 스크립트에서도 확실히 호출할 수 있게 노출
+window.__galleryVideoKick = playFrameVideo;
+const videoKickBtn = $('videoKick');
+if (videoKickBtn) {
+  videoKickBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    gestureSeen = true;
+    kickWallVideos(true);
+  });
 }
 
 /* --------------------------------------------------- supporting textures */
@@ -1487,13 +1610,7 @@ function buildFrame(index, spec, data, img) {
   // 사진 (8번 액자는 움직이는 영상 → THREE.VideoTexture)
   let tex;
   if (data.video) {
-    tex = new THREE.VideoTexture(ensureFrameVideo());
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.minFilter = THREE.LinearFilter;
-    tex.magFilter = THREE.LinearFilter;
-    tex.generateMipmaps = false;
-    tex.anisotropy = 1;
-    videoTex = tex;
+    tex = ensureFrameVideoEntry(index).tex;
   } else {
     tex = new THREE.Texture(img);
     tex.colorSpace = THREE.SRGBColorSpace;
@@ -1542,6 +1659,7 @@ function buildFrame(index, spec, data, img) {
   const frameObj = {
     index, group, print, plaque, glow, spot, spec, box,
     data, img, src: data.src, isUser: false, isVideo: !!data.video,
+    videoSrc: data.video ? VIDEO_SRC : null,
     worldPos: wp.clone(), pulse: 0
   };
   [print, top, bottom, leftRail, rightRail, backing].forEach((m) => { m.userData.frameIndex = index; });
@@ -1559,8 +1677,10 @@ function fitPlane(box, iw, ih) {
 }
 
 function setPrintTexture(frameObj, img, isUser, src) {
-  // 영상 액자를 사진으로 바꿀 때는 배경 재생을 멈춘다
-  if (frameObj.isVideo && videoEl) { try { videoEl.pause(); } catch (err) {} }
+  // 영상 액자를 사진으로 바꿀 때는 그 액자의 영상만 정리한다(다른 벽 영상은 계속 재생)
+  stopFrameVideo(frameObj.index);
+  frameObj.isVideo = false;
+  frameObj.videoSrc = null;
   const tex = new THREE.Texture(img);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = maxAniso;
@@ -1586,6 +1706,53 @@ async function applyPhoto(frameObj, src, meta) {
     w: img.width, h: img.height
   };
   refreshPlaque(frameObj);
+}
+
+// 영상을 액자에 건다: iOS 안전 스타일의 <video> + VideoTexture를 그 액자 전용으로 만든다
+async function applyVideo(frameObj, src, meta, dims) {
+  stopFrameVideo(frameObj.index);
+  const entry = createVideoEntry(src, frameObj.index);
+  const mat = frameObj.print.material;
+  if (mat.map && mat.map.dispose) mat.map.dispose();
+  mat.map = entry.tex;
+  mat.emissiveMap = entry.tex;
+  mat.needsUpdate = true;
+  const w = (dims && dims.w) || 720;
+  const h = (dims && dims.h) || 1280;
+  const fit = fitPlane(frameObj.box, w, h);
+  frameObj.print.geometry.dispose();
+  frameObj.print.geometry = new THREE.PlaneGeometry(fit.w, fit.h);
+  frameObj.img = null;
+  frameObj.src = src;
+  frameObj.isUser = !!meta.isUser;
+  frameObj.isVideo = true;
+  frameObj.videoSrc = src;
+  frameObj.data = { title: meta.title, date: meta.date, comment: meta.comment, w, h };
+  refreshPlaque(frameObj);
+  playFrameVideo();
+  pokeTexture(entry);
+}
+
+// 선택한 영상 파일의 해상도만 빠르게 읽는다(2.5초 안에 안 나오면 세로 영상 기본값)
+function videoMeta(src) {
+  return new Promise((resolve) => {
+    const v = document.createElement('video');
+    v.muted = true;
+    v.playsInline = true;
+    v.preload = 'metadata';
+    v.setAttribute('muted', '');
+    v.setAttribute('playsinline', '');
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      resolve({ w: v.videoWidth || 720, h: v.videoHeight || 1280 });
+    }
+    v.addEventListener('loadedmetadata', finish);
+    v.addEventListener('error', finish);
+    v.src = src;
+    setTimeout(finish, 2500);
+  });
 }
 
 function refreshPlaque(frameObj) {
@@ -1858,11 +2025,11 @@ function openModal(frameObj) {
   const shot = $('modalShot');
   shot.innerHTML = '';
   if (modalVideo) { try { modalVideo.pause(); } catch (err) {} modalVideo = null; }
-  if (frameObj.isVideo && videoEl) {
-    // 영상 액자: 원본 비율 그대로 + 컨트롤로 음소거 해제 가능
+  if (frameObj.isVideo && frameObj.videoSrc) {
+    // 영상 액자: 원본 비율 그대로 + 컨트롤로 음소거 해제 가능 (벽 영상은 계속 재생시켜 둔다)
     const v = document.createElement('video');
     v.className = 'full';
-    v.src = VIDEO_SRC;
+    v.src = frameObj.videoSrc;
     v.controls = true;
     v.loop = true;
     v.muted = true;
@@ -1875,7 +2042,8 @@ function openModal(frameObj) {
     v.addEventListener('volumechange', syncSoundBtn);
     shot.appendChild(v);
     modalVideo = v;
-    const at = videoEl.currentTime || 0;
+    const wallEntry = wallVideos.find((x) => x.index === frameObj.index);
+    const at = (wallEntry && wallEntry.el.currentTime) || 0;
     if (at > 0) { try { v.currentTime = at; } catch (err) {} }
     const pr = v.play();
     if (pr && typeof pr.catch === 'function') pr.catch(() => {});
@@ -1940,7 +2108,7 @@ if (soundBtn) {
 /* 업로드 */
 const uploadEl = $('upload');
 let uploadIndex = 0;
-let pickedSrc = null;
+let picked = null;   // { kind:'image'|'video', src, w, h, name }
 
 function buildChips() {
   const wrap = $('frameChips');
@@ -1961,6 +2129,9 @@ function buildChips() {
 function openUpload(idx) {
   uploadIndex = typeof idx === 'number' ? idx : 0;
   buildChips();
+  picked = null;
+  $('thumb').innerHTML = '🖼️';
+  $('dropTitle').textContent = '사진 / 영상 선택하기';
   $('inDate').value = new Date().toISOString().slice(0, 10);
   uploadEl.classList.remove('hidden');
   paused = true;
@@ -1970,7 +2141,10 @@ function openUpload(idx) {
 }
 function closeUpload() {
   uploadEl.classList.add('hidden');
+  const thumbVideo = $('thumb').querySelector('video');
+  if (thumbVideo) { try { thumbVideo.pause(); } catch (err) {} }
   paused = false;
+  playFrameVideo();
 }
 $('btnUpload').addEventListener('click', () => openUpload(uploadIndex));
 $('uploadClose').addEventListener('click', closeUpload);
@@ -1979,15 +2153,40 @@ uploadEl.addEventListener('click', (e) => { if (e.target === uploadEl) closeUplo
 $('fileInput').addEventListener('change', async (e) => {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
+  const thumb = $('thumb');
+  const nm = file.name.length > 22 ? file.name.slice(0, 22) + '…' : file.name;
+  if (file.type && file.type.indexOf('video') === 0) {
+    try {
+      const url = URL.createObjectURL(file);
+      const dims = await videoMeta(url);
+      picked = { kind: 'video', src: url, w: dims.w, h: dims.h, name: nm };
+      thumb.innerHTML = '';
+      const tv = document.createElement('video');
+      tv.src = url;
+      tv.muted = true;
+      tv.loop = true;
+      tv.autoplay = true;
+      tv.playsInline = true;
+      ['muted', 'loop', 'autoplay', 'playsinline', 'webkit-playsinline'].forEach((a) => tv.setAttribute(a, ''));
+      thumb.appendChild(tv);
+      try { tv.play().catch(() => {}); } catch (err) {}
+      $('dropTitle').textContent = nm;
+      if (!$('inTitle').value) $('inTitle').value = '내 영상';
+    } catch (err) {
+      console.error(err);
+      toast('영상을 읽지 못했어요. 다른 영상을 골라주세요.');
+    }
+    return;
+  }
   try {
     const img = await loadImage(file);
-    pickedSrc = dataUrlFromImage(img, 1400);
-    const thumb = $('thumb');
+    const src = dataUrlFromImage(img, 1400);
+    picked = { kind: 'image', src, w: img.width, h: img.height, name: nm };
     thumb.innerHTML = '';
     const t = new Image();
-    t.src = pickedSrc;
+    t.src = src;
     thumb.appendChild(t);
-    $('dropTitle').textContent = file.name.length > 22 ? file.name.slice(0, 22) + '…' : file.name;
+    $('dropTitle').textContent = nm;
     if (!$('inTitle').value) $('inTitle').value = '내 사진';
   } catch (err) {
     console.error(err);
@@ -2010,20 +2209,27 @@ function loadImage(file) {
 }
 
 $('btnHang').addEventListener('click', async () => {
-  if (!pickedSrc) { toast('먼저 사진을 골라주세요 📷'); return; }
-  const title = ($('inTitle').value || '').trim() || '나의 사진';
+  if (!picked) { toast('먼저 사진이나 영상을 골라주세요 📷'); return; }
+  const isVideo = picked.kind === 'video';
+  const title = ($('inTitle').value || '').trim() || (isVideo ? '나의 영상' : '나의 사진');
   const comment = ($('inComment').value || '').trim();
   const rawDate = $('inDate').value;
   const date = rawDate ? rawDate.replace(/-/g, '.') : '';
   const frameObj = frames[uploadIndex];
-  await applyPhoto(frameObj, pickedSrc, { isUser: true, title, date, comment });
+  if (isVideo) {
+    await applyVideo(frameObj, picked.src, { isUser: true, title, date, comment }, { w: picked.w, h: picked.h });
+  } else {
+    await applyPhoto(frameObj, picked.src, { isUser: true, title, date, comment });
+  }
   frameObj.pulse = 1;
-  saveGallery();
+  if (!isVideo) saveGallery();
   closeUpload();
-  toast(`${String(uploadIndex + 1).padStart(2, '0')}번 액자에 걸었어요 ✨`);
-  pickedSrc = null;
+  toast(isVideo
+    ? `${String(uploadIndex + 1).padStart(2, '0')}번 액자에 영상을 걸었어요 ✨ (새로고침하면 원래대로)`
+    : `${String(uploadIndex + 1).padStart(2, '0')}번 액자에 걸었어요 ✨`);
+  picked = null;
   $('thumb').innerHTML = '🖼️';
-  $('dropTitle').textContent = '사진 선택하기';
+  $('dropTitle').textContent = '사진 / 영상 선택하기';
   $('inTitle').value = '';
   $('inComment').value = '';
   $('fileInput').value = '';
@@ -2036,7 +2242,7 @@ function saveGallery() {
   try {
     const payload = {
       theme: currentTheme,
-      frames: frames.map((f, i) => (f.isUser ? {
+      frames: frames.map((f, i) => (f.isUser && !f.isVideo ? {
         i,
         title: f.data.title,
         date: f.data.date,
@@ -2245,12 +2451,12 @@ function tick() {
     f.glow.material.opacity = base + f.pulse * 0.4 + (hoveredFrame === f ? 0.12 : 0);
   }
 
-  // iOS Safari: VideoTexture의 requestVideoFrameCallback 갱신이 누락되는 경우가 있어
-  // 재생 중일 때 매 프레임 직접 needsUpdate를 밀어준다(벽 액자가 첫 프레임에 멈추는 문제 방지)
-  if (videoTex && videoEl && !videoEl.paused && !videoEl.ended &&
-      videoEl.readyState >= (videoEl.HAVE_CURRENT_DATA || 2)) {
-    videoTex.needsUpdate = true;
+  // iOS Safari: 재생 중이면 매 프레임 텍스처를 직접 밀어 준다(벽 액자가 첫 프레임에 멈추는 문제 방지)
+  for (const entry of wallVideos) {
+    if (!entry.el.paused && !entry.el.ended && entry.el.readyState >= 2) entry.tex.needsUpdate = true;
   }
+  // 멈춘 벽 영상은 다시 재생을 시도하고, 계속 멈춰 있으면 수동 재생 버튼을 띄운다
+  watchWallVideos(dt);
 
   renderer.render(scene, camera);
 }
@@ -2268,8 +2474,8 @@ requestAnimationFrame(() => {
   });
 });
 window.__gallery = {
-  frames, scene, camera, openModal, applyTheme,
-  video: () => videoEl, playFrameVideo, videoTex: () => videoTex,
+  frames, scene, camera, openModal, applyTheme, wallVideos,
+  video: () => videoEl, playFrameVideo, kickWallVideos, videoTex: () => videoTex,
   pause: (v) => { paused = v; },
   setPose: (x, z, y, p) => { player.x = x; player.z = z; yaw = y; pitch = p; },
   state: () => ({ paused, yaw, pitch, pos: [player.x, player.z], fov: camera.fov })
