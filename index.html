@@ -495,7 +495,8 @@
     <button type="button" class="closebtn" id="uploadClose" aria-label="닫기">✕</button>
     <div class="eyebrow">New Exhibit</div>
     <h2>내 사진 걸기</h2>
-    <p class="note">액자를 고르고 사진을 넣으면 전시장 벽에 바로 걸려요.</p>
+    <p class="note">액자를 고르고 사진을 넣으면 전시장 벽에 바로 걸려요.<br>
+      사진·영상은 안 골라도 <b>제목·내용만 바꿀 수 있어요</b> — 지금 걸린 그대로 두고 문구만 고쳐도 돼요.</p>
 
     <div class="field">
       <label>액자 선택</label>
@@ -2109,6 +2110,21 @@ if (soundBtn) {
 const uploadEl = $('upload');
 let uploadIndex = 0;
 let picked = null;   // { kind:'image'|'video', src, w, h, name }
+// 액자를 열었을 때 이미 걸려 있던 문구 — 사진·영상을 새로 고르지 않으면 이 값을 기준으로 문구만 바꾼다
+let formBase = { title: '', comment: '', date: '' };
+let dateTouched = false;   // 날짜 칸을 직접 고쳤는지(안 고쳤으면 기존 날짜 문구를 그대로 둔다)
+
+function todayInputValue() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+// '2026.05.03 · SIGNED' → '2026-05-03' (날짜가 아닌 문구면 빈 값)
+function frameDateInputValue(d) {
+  const m = /^(\d{4})\.(\d{1,2})\.(\d{1,2})/.exec(d || '');
+  if (!m) return '';
+  return `${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}`;
+}
 
 function buildChips() {
   const wrap = $('frameChips');
@@ -2118,21 +2134,65 @@ function buildChips() {
     b.type = 'button';
     b.className = 'chip' + (i === uploadIndex ? ' on' : '');
     b.textContent = `${String(i + 1).padStart(2, '0')} · ${f.data.title.slice(0, 10)}`;
-    b.addEventListener('click', () => {
-      uploadIndex = i;
-      buildChips();
-    });
+    b.addEventListener('click', () => selectFrame(i));
     wrap.appendChild(b);
   });
 }
 
+// 이 액자에 지금 적용된 제목·내용(날짜)을 입력 칸에 미리 채운다 — 일부만 고치기 쉽게
+function fillTextFromFrame() {
+  const f = frames[uploadIndex];
+  const d = (f && f.data) || { title: '', comment: '', date: '' };
+  formBase = { title: d.title || '', comment: d.comment || '', date: d.date || '' };
+  $('inTitle').value = formBase.title;
+  $('inComment').value = formBase.comment;
+  $('inDate').value = frameDateInputValue(formBase.date);
+  dateTouched = false;
+  syncHangLabel();
+}
+
+// 미리보기 칸: 새로 고른 파일이 없으면 지금 걸린 사진/영상을 그대로 보여 준다
+function showFrameThumb() {
+  const f = frames[uploadIndex];
+  const thumb = $('thumb');
+  const tv = thumb.querySelector('video');
+  if (tv) { try { tv.pause(); } catch (err) {} }
+  thumb.innerHTML = '';
+  if (f && f.isVideo) {
+    thumb.textContent = '🎬';
+    $('dropTitle').textContent = '지금 걸린 영상 그대로 두기';
+  } else if (f && f.src) {
+    const t = new Image();
+    t.src = f.src;
+    t.alt = '';
+    thumb.appendChild(t);
+    $('dropTitle').textContent = '지금 걸린 사진 그대로 두기';
+  } else {
+    thumb.textContent = '🖼️';
+    $('dropTitle').textContent = '사진 / 영상 선택하기';
+  }
+}
+
+function selectFrame(i) {
+  uploadIndex = i;
+  buildChips();
+  fillTextFromFrame();
+  if (!picked) showFrameThumb();   // 새로 고른 사진이 있으면 그 미리보기를 그대로 둔다
+}
+
+// 사진을 안 골랐으면 버튼도 '문구만 저장'으로 바뀐다
+function syncHangLabel() {
+  const b = $('btnHang');
+  if (!b) return;
+  b.textContent = picked ? '전시하기' : '제목·내용만 저장';
+}
+
 function openUpload(idx) {
   uploadIndex = typeof idx === 'number' ? idx : 0;
-  buildChips();
   picked = null;
-  $('thumb').innerHTML = '🖼️';
-  $('dropTitle').textContent = '사진 / 영상 선택하기';
-  $('inDate').value = new Date().toISOString().slice(0, 10);
+  buildChips();
+  fillTextFromFrame();
+  showFrameThumb();
   uploadEl.classList.remove('hidden');
   paused = true;
   velocity.set(0, 0, 0);
@@ -2149,6 +2209,7 @@ function closeUpload() {
 $('btnUpload').addEventListener('click', () => openUpload(uploadIndex));
 $('uploadClose').addEventListener('click', closeUpload);
 uploadEl.addEventListener('click', (e) => { if (e.target === uploadEl) closeUpload(); });
+$('inDate').addEventListener('input', () => { dateTouched = true; });
 
 $('fileInput').addEventListener('change', async (e) => {
   const file = e.target.files && e.target.files[0];
@@ -2172,6 +2233,7 @@ $('fileInput').addEventListener('change', async (e) => {
       try { tv.play().catch(() => {}); } catch (err) {}
       $('dropTitle').textContent = nm;
       if (!$('inTitle').value) $('inTitle').value = '내 영상';
+      syncHangLabel();
     } catch (err) {
       console.error(err);
       toast('영상을 읽지 못했어요. 다른 영상을 골라주세요.');
@@ -2188,6 +2250,7 @@ $('fileInput').addEventListener('change', async (e) => {
     thumb.appendChild(t);
     $('dropTitle').textContent = nm;
     if (!$('inTitle').value) $('inTitle').value = '내 사진';
+    syncHangLabel();
   } catch (err) {
     console.error(err);
     toast('사진을 읽지 못했어요. 다른 사진을 골라주세요.');
@@ -2209,24 +2272,59 @@ function loadImage(file) {
 }
 
 $('btnHang').addEventListener('click', async () => {
-  if (!picked) { toast('먼저 사진이나 영상을 골라주세요 📷'); return; }
-  const isVideo = picked.kind === 'video';
-  const title = ($('inTitle').value || '').trim() || (isVideo ? '나의 영상' : '나의 사진');
-  const comment = ($('inComment').value || '').trim();
-  const rawDate = $('inDate').value;
-  const date = rawDate ? rawDate.replace(/-/g, '.') : '';
   const frameObj = frames[uploadIndex];
+  if (!frameObj) { toast('액자를 먼저 골라주세요 🖼️'); return; }
+  const num = String(uploadIndex + 1).padStart(2, '0');
+  const typedTitle = ($('inTitle').value || '').trim();
+  const typedComment = ($('inComment').value || '').trim();
+  const rawDate = $('inDate').value;
+
+  // 사진·영상을 새로 고르지 않았다 → 지금 걸린 사진/영상과 비율은 그대로 두고 제목·내용만 바꾼다
+  if (!picked) {
+    const title = typedTitle || formBase.title || (frameObj.isVideo ? '나의 영상' : '나의 사진');
+    const comment = typedComment;
+    // 날짜를 직접 고쳤을 때만 바꾼다 (안 고쳤으면 '2026.05.03 · SIGNED' 같은 기존 문구 그대로)
+    const date = dateTouched
+      ? (rawDate ? rawDate.replace(/-/g, '.') : '')
+      : (frameObj.data.date || (rawDate ? rawDate.replace(/-/g, '.') : ''));
+    if (title === frameObj.data.title && comment === (frameObj.data.comment || '') && date === (frameObj.data.date || '')) {
+      toast('바뀐 문구가 없어요 ✏️');
+      return;
+    }
+    frameObj.data.title = title;
+    frameObj.data.comment = comment;
+    frameObj.data.date = date;
+    frameObj.textEdited = true;   // 사진·영상은 그대로 두고 문구만 바꿈
+    refreshPlaque(frameObj);
+    frameObj.pulse = 1;
+    saveGallery();
+    closeUpload();
+    toast(frameObj.isVideo
+      ? `${num}번 액자 문구를 바꿨어요 ✏️ 영상은 그대로 재생 중이에요`
+      : `${num}번 액자 문구를 바꿨어요 ✏️ 사진은 그대로예요`);
+    picked = null;
+    $('inTitle').value = '';
+    $('inComment').value = '';
+    $('fileInput').value = '';
+    return;
+  }
+
+  const isVideo = picked.kind === 'video';
+  const title = typedTitle || (isVideo ? '나의 영상' : '나의 사진');
+  const comment = typedComment;
+  const date = rawDate ? rawDate.replace(/-/g, '.') : todayInputValue().replace(/-/g, '.');
   if (isVideo) {
     await applyVideo(frameObj, picked.src, { isUser: true, title, date, comment }, { w: picked.w, h: picked.h });
   } else {
     await applyPhoto(frameObj, picked.src, { isUser: true, title, date, comment });
   }
+  frameObj.textEdited = false;   // 새 미디어를 걸었으니 문구도 이 액자와 함께 저장된다
   frameObj.pulse = 1;
-  if (!isVideo) saveGallery();
+  saveGallery();
   closeUpload();
   toast(isVideo
-    ? `${String(uploadIndex + 1).padStart(2, '0')}번 액자에 영상을 걸었어요 ✨ (새로고침하면 원래대로)`
-    : `${String(uploadIndex + 1).padStart(2, '0')}번 액자에 걸었어요 ✨`);
+    ? `${num}번 액자에 영상을 걸었어요 ✨ (새로고침하면 원래대로)`
+    : `${num}번 액자에 걸었어요 ✨`);
   picked = null;
   $('thumb').innerHTML = '🖼️';
   $('dropTitle').textContent = '사진 / 영상 선택하기';
@@ -2248,6 +2346,13 @@ function saveGallery() {
         date: f.data.date,
         comment: f.data.comment,
         image: f.src
+      } : null)).filter(Boolean),
+      // 사진·영상을 새로 고르지 않고 문구만 바꿈 액자(기본 작품·8번 영상 액자 포함)
+      texts: frames.map((f, i) => (f.textEdited ? {
+        i,
+        title: f.data.title,
+        date: f.data.date,
+        comment: f.data.comment
       } : null)).filter(Boolean)
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -2261,13 +2366,28 @@ async function restoreGallery() {
   try { payload = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (e) { payload = null; }
   if (!payload) return;
   if (payload.theme === 'dark') applyTheme('dark');
-  if (!Array.isArray(payload.frames)) return;
-  for (const item of payload.frames) {
-    const f = frames[item.i];
-    if (!f || !item.image) continue;
-    try {
-      await applyPhoto(f, item.image, { isUser: true, title: item.title, date: item.date, comment: item.comment });
-    } catch (e) { console.warn('[gallery] restore item failed', e); }
+  const restored = new Set();
+  if (Array.isArray(payload.frames)) {
+    for (const item of payload.frames) {
+      const f = frames[item.i];
+      if (!f || !item.image) continue;
+      try {
+        await applyPhoto(f, item.image, { isUser: true, title: item.title, date: item.date, comment: item.comment });
+        restored.add(item.i);
+      } catch (e) { console.warn('[gallery] restore item failed', e); }
+    }
+  }
+  // 사진·영상은 그대로 두고 문구만 바꾼 액자 (기본 작품·8번 영상 액자 포함)
+  if (Array.isArray(payload.texts)) {
+    for (const item of payload.texts) {
+      const f = frames[item.i];
+      if (!f || restored.has(item.i)) continue;
+      if (item.title) f.data.title = item.title;
+      if (typeof item.date === 'string') f.data.date = item.date;
+      if (typeof item.comment === 'string') f.data.comment = item.comment;
+      f.textEdited = true;
+      refreshPlaque(f);
+    }
   }
 }
 
