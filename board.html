@@ -547,6 +547,7 @@
   var SHARE = {
     enabled: true,
     sheetId: '15HaYcO4QoYNR13GpkLlX6aJ_tuJUy1Z8zrPkhdRAkEc',
+    gid: '573210291',   /* 방명록 탭 (첫 탭은 공감 탭이라 gid를 명시) */
     formAction: 'https://docs.google.com/forms/d/e/1FAIpQLSc2E35rRKhUpvV5ORJp95KikQ98JqsoYXfoNVSIEy6ECQWStQ/formResponse',
     entries: { nick: 'entry.162665469', msg: 'entry.675877610', color: '' },
     refreshSeconds: 45
@@ -1221,7 +1222,7 @@
       }, 12000);
       script.async = true;
       script.src = 'https://docs.google.com/spreadsheets/d/' + SHARE.sheetId +
-        '/gviz/tq?tqx=out:json;responseHandler:' + cb + '&_=' + Date.now();
+        '/gviz/tq?tqx=out:json;responseHandler:' + cb + '&gid=' + (SHARE.gid || '573210291') + '&_=' + Date.now();
       document.head.appendChild(script);
     });
   }
