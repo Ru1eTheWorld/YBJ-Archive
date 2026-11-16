@@ -383,6 +383,24 @@
   .gb-item.mine .gb-time{color:var(--accent);}
   .gb-msg{margin:0;font-size:12.6px;line-height:1.62;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;}
   .gb-empty{padding:20px 8px;text-align:center;font-size:11.8px;line-height:1.6;color:var(--muted);}
+  .gb-item-foot{display:flex;align-items:center;justify-content:flex-end;margin-top:1px;}
+  .gb-like{
+    appearance:none;font:inherit;display:inline-flex;align-items:center;gap:4px;
+    padding:4px 10px 4px 8px;border-radius:999px;cursor:pointer;line-height:1;
+    font-size:11px;font-weight:800;letter-spacing:-.1px;color:var(--muted);
+    background:rgba(127,127,127,.07);border:1px solid var(--line);
+    transition:transform .16s ease,background .2s ease,border-color .2s ease,color .2s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .gb-like:hover{border-color:rgba(255,92,124,.45);color:#d94a66;}
+  .gb-like:active{transform:scale(.94);}
+  .gb-like .gb-like-ico{font-size:12.5px;line-height:1;}
+  .gb-like .gb-like-n{min-width:8px;text-align:center;font-variant-numeric:tabular-nums;}
+  .gb-like.on{color:#d63b5b;background:rgba(255,92,124,.12);border-color:rgba(255,92,124,.42);}
+  .gb-like.pop{animation:gbpop .38s ease;}
+  .gb-like.pop .gb-like-ico{display:inline-block;animation:gbheart .42s ease;}
+  @keyframes gbpop{0%{transform:scale(1);}40%{transform:scale(1.18);}100%{transform:scale(1);}}
+  @keyframes gbheart{0%{transform:scale(.7);}45%{transform:scale(1.35) rotate(-6deg);}100%{transform:scale(1) rotate(0);}}
   @media (max-width:640px){
     .topbar{gap:6px;padding-left:11px;padding-right:11px;}
     .brand{overflow:hidden;}
@@ -667,15 +685,22 @@
    Google Forms + Google Sheets 방명록.
    · 읽기: 시트 gviz JSONP(responseHandler) — 브라우저 CORS 제약 없이 동작
    · 쓰기: Forms formResponse 로 no-cors POST
+   · 하트 공감: 별도의 공감 폼으로 글 ID를 남기고, 같은 시트의 '공감' 탭을 읽어 글마다 집계
    2026-11-15 폼 HTML(FB_PUBLIC_LOAD_DATA_)에서 추출하고 prefill URL로 검증한 entry 번호:
-     🦫닉네임 → entry.162665469 / 남길 말👀 → entry.675877610 */
+     🦫닉네임 → entry.162665469 / 남길 말👀 → entry.675877610
+   공감 폼도 같은 구조(질문 1072609807 안의 입력 796877984)라 entry.796877984 를 씁니다. */
 (function () {
   'use strict';
   var FORM_ACTION = 'https://docs.google.com/forms/d/e/1FAIpQLSc2E35rRKhUpvV5ORJp95KikQ98JqsoYXfoNVSIEy6ECQWStQ/formResponse';
   var ENTRY_NICK = 'entry.162665469';
   var ENTRY_MSG = 'entry.675877610';
   var SHEET_ID = '15HaYcO4QoYNR13GpkLlX6aJ_tuJUy1Z8zrPkhdRAkEc';
+  var GB_GID = '573210291';        /* 방명록 탭 */
+  var LIKE_GID = '1539010110';     /* 공감 탭 */
   var NICK_KEY = 'galleryGuestbook.nick.v1';
+  var LIKE_KEY = 'galleryGuestbook.likes.v1';
+  var LIKE_FORM_ACTION = 'https://docs.google.com/forms/d/e/1FAIpQLSfKEFUVXqY0QhIWYdW9QxeGNenAnFUvWZJMdCdaLiXHlHjNkg/formResponse';
+  var ENTRY_LIKE = 'entry.796877984';
 
   var root = document.getElementById('guestbook');
   var btn = document.getElementById('btnGuestbook');
@@ -688,14 +713,29 @@
   var countEl = document.getElementById('gbCount');
   var refreshEl = document.getElementById('gbRefresh');
   var closeEl = document.getElementById('gbClose');
+  var toastEl = document.getElementById('toast');
   if (!root || !btn || !formEl || !nickEl || !msgEl || !listEl) return;
 
   var remoteItems = [];   /* 시트에서 읽어온 글(오래된 순) */
   var pendingItems = [];  /* 방금 남긴 글(시트 반영 전) */
+  var likeCounts = {};    /* 글 ID → 공감 수 */
+  var likedKeys = {};     /* 이 기기에서 이미 공감한 글 ID */
+  var likesSending = {};
   var loading = false;
   var isOpen = false;
   var seq = 0;
   var retryTimer = 0;
+  var toastTimer = 0;
+
+  try {
+    var rawLikes = localStorage.getItem(LIKE_KEY);
+    var savedLikes = rawLikes ? JSON.parse(rawLikes) : [];
+    if (savedLikes && savedLikes.length) {
+      for (var sl = 0; sl < savedLikes.length; sl++) {
+        if (savedLikes[sl]) likedKeys[String(savedLikes[sl])] = true;
+      }
+    }
+  } catch (e) {}
 
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
 
@@ -720,6 +760,15 @@
     return s.length > 26 ? s.slice(0, 26) + '…' : s;
   }
 
+  /* 글을 가리키는 안정적인 키: 시트의 타임스탬프 값 + '|' + 닉네임(공백 정규화) */
+  function normText(value) {
+    return String(value == null ? '' : value).replace(/[\s\u00a0]+/g, ' ').trim();
+  }
+
+  function itemKey(item) {
+    return normText(item.time) + '|' + normText(item.nick);
+  }
+
   function parseTable(payload) {
     var out = [];
     var table = payload && payload.table;
@@ -736,12 +785,29 @@
       var msg = (vals[2] || '').trim();
       if (!nick && !msg) continue;
       if (nick === '🦫닉네임' || msg === '남길 말👀') continue;  /* 머리글 행 */
-      out.push({ time: time, nick: nick || '익명', msg: msg });
+      var item = { time: time, nick: nick || '익명', msg: msg };
+      item.key = itemKey(item);
+      out.push(item);
     }
     return out;
   }
 
-  function fetchFromSheet() {
+  /* 공감 탭: [타임스탬프, 공감 ID] 행을 글 ID별로 센다 */
+  function parseLikes(payload) {
+    var counts = {};
+    var table = payload && payload.table;
+    var rows = (table && table.rows) || [];
+    for (var i = 0; i < rows.length; i++) {
+      var cells = (rows[i] && rows[i].c) || [];
+      var raw = cells[1] && cells[1].v != null ? String(cells[1].v) : '';
+      var key = normText(raw);
+      if (!key || key === '공감 ID') continue;
+      counts[key] = (counts[key] || 0) + 1;
+    }
+    return counts;
+  }
+
+  function fetchSheet(gid) {
     return new Promise(function (resolve, reject) {
       seq += 1;
       var cb = '__galleryGuestbook' + seq;
@@ -758,9 +824,7 @@
         if (settled) return;
         settled = true;
         cleanup();
-        var items;
-        try { items = parseTable(payload); } catch (err) { reject(err); return; }
-        resolve(items);
+        resolve(payload);
       };
       script.onerror = function () {
         if (settled) return;
@@ -776,8 +840,108 @@
       }, 12000);
       script.async = true;
       script.src = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID +
-        '/gviz/tq?tqx=out:json;responseHandler:' + cb;
+        '/gviz/tq?tqx=out:json;responseHandler:' + cb + '&gid=' + gid;
       document.head.appendChild(script);
+    });
+  }
+
+  function fetchGuestbook() {
+    return fetchSheet(GB_GID).then(function (payload) { return parseTable(payload); });
+  }
+
+  function fetchLikes() {
+    return fetchSheet(LIKE_GID).then(function (payload) { return parseLikes(payload); });
+  }
+
+  function persistLikes() {
+    try {
+      var keys = [];
+      for (var k in likedKeys) {
+        if (Object.prototype.hasOwnProperty.call(likedKeys, k) && likedKeys[k]) keys.push(k);
+      }
+      localStorage.setItem(LIKE_KEY, JSON.stringify(keys.slice(-400)));
+    } catch (e) {}
+  }
+
+  function gbToast(text) {
+    if (!toastEl) return;
+    toastEl.textContent = text;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2200);
+  }
+
+  function paintLike(el, key, animate) {
+    if (!el) return;
+    var liked = !!likedKeys[key];
+    var count = likeCounts[key] || 0;
+    el.classList.toggle('on', liked);
+    el.setAttribute('aria-pressed', liked ? 'true' : 'false');
+    var ico = el.querySelector('.gb-like-ico');
+    var num = el.querySelector('.gb-like-n');
+    if (ico) ico.textContent = liked ? '❤️' : '🤍';
+    if (num) num.textContent = String(count);
+    if (animate) {
+      el.classList.remove('pop');
+      void el.offsetWidth;
+      el.classList.add('pop');
+    }
+  }
+
+  function likeButton(item) {
+    var el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'gb-like';
+    el.setAttribute('aria-label', item.nick + '님 글에 공감');
+    var ico = document.createElement('span');
+    ico.className = 'gb-like-ico';
+    ico.setAttribute('aria-hidden', 'true');
+    var num = document.createElement('span');
+    num.className = 'gb-like-n';
+    el.appendChild(ico);
+    el.appendChild(num);
+    paintLike(el, item.key, false);
+    el.addEventListener('click', function () { sendLike(item, el); });
+    return el;
+  }
+
+  function sendLike(item, el) {
+    var key = item.key;
+    if (!key || likesSending[key]) return;
+    if (likedKeys[key]) { gbToast('이미 공감한 글이에요 🤍'); return; }
+
+    likesSending[key] = true;
+    likedKeys[key] = true;
+    likeCounts[key] = (likeCounts[key] || 0) + 1;
+    persistLikes();
+    paintLike(el, key, true);
+
+    var body = new URLSearchParams();
+    body.append(ENTRY_LIKE, key);
+
+    var post;
+    try {
+      post = fetch(LIKE_FORM_ACTION, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: body.toString(),
+        keepalive: true
+      });
+    } catch (err) {
+      post = Promise.reject(err);
+    }
+
+    post.then(function () {
+      likesSending[key] = false;
+      gbToast('공감을 남겼어요 ❤️');
+    }).catch(function () {
+      likesSending[key] = false;
+      delete likedKeys[key];
+      likeCounts[key] = Math.max(0, (likeCounts[key] || 1) - 1);
+      persistLikes();
+      paintLike(el, key, false);
+      gbToast('공감을 저장하지 못했어요. 잠시 뒤 다시 눌러주세요.');
     });
   }
 
@@ -800,6 +964,12 @@
       body.className = 'gb-msg';
       body.textContent = item.msg;
       wrap.appendChild(body);
+    }
+    if (item.key) {
+      var foot = document.createElement('div');
+      foot.className = 'gb-item-foot';
+      foot.appendChild(likeButton(item));
+      wrap.appendChild(foot);
     }
     return wrap;
   }
@@ -838,8 +1008,11 @@
     if (refreshEl) refreshEl.disabled = true;
     if (!quiet) say('최신 방명록을 불러오는 중…');
     render();
-    return fetchFromSheet().then(function (items) {
-      remoteItems = items;
+    var gbReq = fetchGuestbook();
+    var likeReq = fetchLikes().catch(function () { return null; });
+    return Promise.all([gbReq, likeReq]).then(function (res) {
+      remoteItems = res[0] || [];
+      if (res[1]) likeCounts = res[1];
       dropSynced();
       loading = false;
       if (refreshEl) refreshEl.disabled = false;
