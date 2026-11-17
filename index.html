@@ -661,7 +661,7 @@
     <button type="button" class="closebtn" id="tkClose" aria-label="닫기">✕</button>
     <div class="eyebrow">Admission Ticket</div>
     <h2 id="tkTitle">나만의 전시회 티켓 🎫</h2>
-    <p class="gb-sub">닉네임을 넣으면 40주년 기념 입장권이 바로 만들어져요. 비워두면 <b>VIP GUEST</b>로 발급돼요.</p>
+    <p class="gb-sub">닉네임을 넣으면 전시회 기념 입장권이 바로 만들어져요. 비워두면 <b>VIP GUEST</b>로 발급돼요.</p>
     <div class="tk-stage"><img id="tkImg" alt="임재범 찍덕 전시관 입장권"></div>
     <div class="tk-row">
       <input type="text" id="tkNick" maxlength="18" placeholder="닉네임 (예: Ru1eTheWorld)" aria-label="닉네임" autocomplete="nickname" enterkeyhint="done">
@@ -3489,7 +3489,7 @@ $('btnReset').addEventListener('click', () => {
 });
 
 /* ------------------------------------------------- 🎫 나만의 전시회 티켓
-   방문자 닉네임으로 40주년 기념 입장권을 캔버스에 바로 그려 PNG로 건넨다.
+   방문자 닉네임으로 전시회 기념 입장권을 캔버스에 바로 그려 PNG로 건넨다.
    iOS 사파리는 download 속성을 무시할 수 있어 <img> 미리보기를 함께 두어
    길게 눌러 '사진에 저장'하는 길도 열어 둔다. */
 const TICKET_W = 1080, TICKET_H = 560;
@@ -3583,7 +3583,7 @@ function drawTicket(nick) {
   // 머리말
   ctx.fillStyle = TICKET_GOLD + '0.92)';
   ctx.font = `800 13px ${KR_FONT}`;
-  drawSpaced(ctx, 'RU1ETHEWORLD  ·  40TH ANNIVERSARY', 92, 104, 2.4);
+  drawSpaced(ctx, 'YIM JAE BEUM  •  우리 언젠가 꼭 만나자', 92, 104, 1.6);
 
   // 타이틀 — '임재범' / '찍덕 전시관' 두 줄
   ctx.fillStyle = '#f8eeda';
@@ -3660,11 +3660,11 @@ function drawTicket(nick) {
   drawSpaced(ctx, 'ADMIT ONE', -admitW / 2, 4, 3.2);
   ctx.restore();
 
-  // 40 워터마크 · 워드마크 · 번호
+  // YBJ 워터마크 · 워드마크 · 번호
   ctx.textAlign = 'center';
   ctx.fillStyle = 'rgba(216,178,113,0.20)';
-  ctx.font = `900 100px ${KR_FONT}`;
-  ctx.fillText('40', 948, 208);
+  ctx.font = `900 84px ${KR_FONT}`;
+  ctx.fillText('YBJ', 948, 204);
   ctx.fillStyle = 'rgba(248,238,218,0.62)';
   ctx.font = `700 11px ${KR_FONT}`;
   ctx.fillText('Ru1eTheWorld', 948, 240);
@@ -3694,8 +3694,8 @@ function drawTicket(nick) {
   ctx.lineWidth = 1;
   ctx.stroke();
   ctx.fillStyle = 'rgba(216,178,113,0.75)';
-  ctx.font = `900 17px ${KR_FONT}`;
-  ctx.fillText('40', 948, 458);
+  ctx.font = `900 12px ${KR_FONT}`;
+  ctx.fillText('YBJ', 948, 456);
   ctx.textAlign = 'left';
 
   return c.toDataURL('image/png');
