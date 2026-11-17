@@ -403,6 +403,7 @@
   @keyframes gbheart{0%{transform:scale(.7);}45%{transform:scale(1.35) rotate(-6deg);}100%{transform:scale(1) rotate(0);}}
   /* ---------- BGM 토글 ---------- */
   .topbar{flex-wrap:nowrap;}
+  .topbar > .iconbtn, .topbar > .btn, .topbar > .seg{flex:0 0 auto;}   /* 모바일에서 버튼이 찌그러지지 않게(제목만 줄어듦) */
   .iconbtn.bgm{position:relative;width:auto;height:38px;padding:0 13px;gap:6px;font-size:12px;font-weight:800;letter-spacing:-.2px;white-space:nowrap;}
   .iconbtn.bgm .bgm-ico{font-size:13.5px;line-height:1;filter:grayscale(1);opacity:.72;transition:filter .3s ease,opacity .3s ease,transform .3s ease;}
   .iconbtn.bgm.on{
@@ -432,6 +433,12 @@
     .iconbtn.bgm .bgm-lbl{display:none;}
     .iconbtn.bgm .bgm-ico{font-size:14px;}
     .gb-list{max-height:min(34dvh,240px);}
+  }
+  /* 아주 좁은 화면: 한 줄 유지 */
+  @media (max-width:430px){
+    .topbar{gap:5px;padding-left:9px;padding-right:9px;}
+    .brand b{max-width:72px;}
+    .seg button{font-size:9.5px;padding:5px 6px;letter-spacing:-.3px;}
   }
 </style>
 </head>
@@ -2887,7 +2894,7 @@ window.__gallery = {
   /* ------------------------------------------------------------- 엔진 상태 */
   var ctx = null;
   var master = null;
-  var levelValue = 0.30;            /* 전체 볼륨(아주 은은하게) */
+  var levelValue = 0.42;            /* 전체 볼륨(아주 은은하게) */
   var on = false;                   /* 사용자가 켜 둔 상태 */
   var ducked = false;               /* 영상 모달 등으로 잠시 멎은 상태 */
   var pumpTimer = 0;
@@ -3144,6 +3151,10 @@ window.__gallery = {
 
   function refresh() {
     if (!ctx) return;
+    /* iOS가 통화·백그라운드로 끊어 둔 오디오 시계를 되살린다 */
+    if (active() && ctx.state !== 'running' && ctx.resume) {
+      try { var pr = ctx.resume(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
+    }
     if (active()) {
       nextCycle = ctx.currentTime + 0.08;   /* 풀릴 때는 새 마디부터 자연스럽게 */
       startPump();
@@ -3247,6 +3258,7 @@ window.__gallery = {
       master.connect(an);
       return new Promise(function (resolve) {
         var buf = new Float32Array(an.fftSize);
+        var freq = new Float32Array(an.frequencyBinCount);
         var peak = 0, sum = 0, n = 0;
         var t0 = performance.now();
         (function step() {
@@ -3258,8 +3270,23 @@ window.__gallery = {
           }
           if (performance.now() - t0 < (ms || 1200)) requestAnimationFrame(step);
           else {
+            an.getFloatFrequencyData(freq);
+            var hzPerBin = (ctx.sampleRate / 2) / freq.length;
+            var low = 0, mid = 0, high = 0, num = 0, den = 0;
+            for (var k = 1; k < freq.length; k++) {
+              var db = freq[k];
+              if (!isFinite(db)) continue;
+              var mag = Math.pow(10, db / 20);
+              var f = k * hzPerBin;
+              if (f < 300) low += mag; else if (f < 2000) mid += mag; else high += mag;
+              num += f * mag; den += mag;
+            }
             try { master.disconnect(an); } catch (e) {}
-            resolve({ rms: Math.sqrt(sum / Math.max(1, n)), peak: peak });
+            resolve({
+              rms: Math.sqrt(sum / Math.max(1, n)), peak: peak,
+              centroid: den ? num / den : 0,
+              low: low, mid: mid, high: high
+            });
           }
         })();
       });
