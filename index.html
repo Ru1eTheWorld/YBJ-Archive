@@ -2851,7 +2851,10 @@ window.__gallery = {
 </script>
 <script>
 /* ------------------------------------------------------------------ BGM
-   전시장 배경음악 — Web Audio API로 그 자리에서 합성하는 밝고 산뜻한 피아노.
+   전시장 배경음악 — Web Audio API로 그 자리에서 합성하는 몽글몽글 로파이 칠 비트.
+   · 76 BPM 스윙 붐뱁. FM 일렉피아노가 Fmaj7–Em7–Dm9–Cmaj9를 물들게 훑고,
+     부드러운 킥·스네어·햇이 뒤를 받친다. LP 잡음과 테이프 워블(0.24Hz ±4.5센트),
+     3.1kHz 저역통과로 낡은 카세트 같은 온기를 낸다.
    · 외부 음원 파일·CDN을 쓰지 않아 저작권 걱정이 없다.
    · 모바일 브라우저(iOS Safari 포함)는 사용자 제스처가 있어야 소리가 나므로
      BGM 버튼 탭 시점에 AudioContext를 만들고 resume() 한다.
@@ -2876,50 +2879,53 @@ window.__gallery = {
   }
 
   /* ------------------------------------------------------------ 음악 설계 */
-  var BPM = 96;
-  var BEAT = 60 / BPM;              /* 0.625초 — 가볍게 걷는 산책 템포 */
+  var BPM = 76;
+  var BEAT = 60 / BPM;              /* 0.789초 — 느긋하게 고개 끄덕이는 템포 */
   var BAR = BEAT * 4;               /* 한 코드 = 4박 */
-  var CYCLE = BAR * 8;              /* 8개 코드 = 32박 (20초) */
+  var CYCLE = BAR * 8;              /* 8개 코드 = 32박 (25초) */
+  var SWING = 0.13;                 /* 8분음표 뒷박을 살짝 늦춰 붐뱁의 그루브를 만든다 */
+  var TRIM = 0.45;                  /* 합성음 전체 출력 트림 */
+  var CUTOFF = 3100;                /* 로파이 특유의 먹먹한 저역통과 */
 
-  /* Cadd9 → G/B → Fmaj7/A → G6 : 맑고 기분 좋은 장조 진행(네 마디를 두 번).
-     두 번째 네 마디는 멜로디를 한결 높여 들뜬 기분을 더한다.
-     mel = [8분음표 위치, 음높이, 길이(박), 세기] */
+  /* Fmaj7 → Em7 → Dm9 → Cmaj9 : 따뜻하고 살짝 가라앉은 장조 진행(네 마디를 두 번).
+     감쇠가 긴 일렉피아노라 코드톤만 겹쳐도 충분히 풍성하다. */
   var PROG = [
-    { bass: 48, chord: [60, 64, 67, 74], arp: [0, 2, 1, 3, 2, 4, 3, 2],   /* Cadd9 */
-      mel: [[0, 67, 1, 0.62], [1, 72, 1, 0.55], [2, 74, 1, 0.52], [3, 76, 1.6, 0.66], [5, 74, 0.6, 0.45], [6, 72, 1, 0.5]] },
-    { bass: 47, chord: [59, 62, 67, 71], arp: [0, 1, 2, 3, 4, 3, 2, 1],   /* G/B */
-      mel: [[0, 71, 1, 0.6], [1, 74, 1, 0.52], [2, 76, 1, 0.54], [3, 74, 1.6, 0.6], [5, 71, 0.6, 0.44], [6, 67, 0.6, 0.42], [7, 71, 0.5, 0.4]] },
-    { bass: 45, chord: [53, 57, 60, 64], arp: [0, 2, 1, 3, 4, 3, 2, 1],   /* Fmaj7/A */
-      mel: [[0, 72, 1, 0.6], [1, 76, 1, 0.56], [2, 74, 1, 0.5], [3, 72, 1.6, 0.58], [5, 69, 0.6, 0.44], [6, 72, 0.8, 0.48]] },
-    { bass: 43, chord: [55, 59, 62, 64], arp: [0, 2, 1, 3, 2, 4, 3, 2],   /* G6 */
-      mel: [[0, 74, 1, 0.62], [1, 71, 1, 0.5], [2, 74, 0.8, 0.48], [3, 76, 1.8, 0.62], [5, 74, 0.6, 0.44], [6, 71, 0.7, 0.4]] },
-    { bass: 48, chord: [60, 64, 67, 74], arp: [0, 2, 1, 3, 2, 4, 3, 2],   /* Cadd9 */
-      mel: [[0, 76, 1, 0.64], [1, 74, 1, 0.54], [2, 72, 1, 0.5], [4, 72, 1, 0.5], [5, 76, 1, 0.55], [6, 74, 1.6, 0.56]] },
-    { bass: 47, chord: [59, 62, 67, 71], arp: [0, 1, 2, 3, 4, 3, 2, 1],   /* G/B */
-      mel: [[0, 74, 0.8, 0.55], [1, 71, 0.8, 0.46], [2, 67, 1, 0.5], [3, 71, 1, 0.5], [4, 74, 1, 0.52], [5, 76, 1, 0.55], [6, 74, 0.8, 0.48], [7, 71, 0.7, 0.42]] },
-    { bass: 45, chord: [53, 57, 60, 64], arp: [0, 2, 1, 3, 4, 3, 2, 1],   /* Fmaj7/A */
-      mel: [[0, 69, 1, 0.55], [1, 72, 1, 0.52], [2, 76, 1, 0.58], [3, 72, 1.4, 0.52], [5, 69, 0.7, 0.44], [6, 72, 0.9, 0.48]] },
-    { bass: 43, chord: [55, 59, 62, 64], arp: [0, 2, 1, 3, 2, 4, 3, 2],   /* G6 */
-      mel: [[0, 71, 1, 0.55], [1, 74, 1, 0.52], [2, 76, 1, 0.56], [3, 74, 1.8, 0.6], [5, 71, 0.6, 0.42], [6, 67, 0.6, 0.38], [7, 62, 0.5, 0.34]] }
+    { bass: 41, chord: [53, 57, 60, 64], mel: [[1.62, 72, 0.8, 0.3], [3.28, 76, 1.1, 0.26]] },  /* Fmaj7 */
+    { bass: 40, chord: [52, 55, 59, 62], mel: [[2.28, 74, 0.9, 0.28]] },                         /* Em7 */
+    { bass: 38, chord: [50, 53, 57, 60], mel: [[1.62, 69, 1.1, 0.28], [3.28, 74, 0.9, 0.25]] },  /* Dm9 */
+    { bass: 36, chord: [48, 52, 55, 59], mel: [[2.28, 67, 1.5, 0.27]] },                         /* Cmaj9 */
+    { bass: 41, chord: [53, 57, 60, 64], mel: [[1.62, 72, 0.9, 0.3], [3.28, 79, 1, 0.24]] },     /* Fmaj7 */
+    { bass: 40, chord: [52, 55, 59, 62], mel: [[2.28, 76, 0.9, 0.27]] },                         /* Em7 */
+    { bass: 38, chord: [50, 53, 57, 60], mel: [[1.62, 72, 1.1, 0.28], [3.28, 74, 0.8, 0.24]] },  /* Dm9 */
+    { bass: 36, chord: [48, 52, 55, 64], mel: [[2.28, 71, 1.4, 0.26]] }                          /* Cmaj9 */
   ];
 
   function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
 
+  /* 스윙: 8분음표 뒷박을 조금 늦춘다 */
+  function sw(beat) {
+    var i = Math.floor(beat + 1e-9);
+    var f = beat - i;
+    return i + (f > 0.45 && f < 0.55 ? 0.5 + SWING : f);
+  }
+
   /* ------------------------------------------------------------- 엔진 상태 */
   var ctx = null;
   var master = null;
-  var levelValue = 0.72;            /* 전체 볼륨(짧아진 잔향만큼 조금 올려 휴대폰 스피커에서도 또렷하게) */
+  var bodyBus = null;
+  var wobbleGain = null;
+  var levelValue = 0.85;            /* 전체 볼륨 */
   var on = false;                   /* 사용자가 켜 둔 상태 */
   var ducked = false;               /* 영상 모달 등으로 잠시 멎은 상태 */
   var pumpTimer = 0;
   var nextCycle = 0;
-  var lastCycleIdx = -1;
   var rndState = 20260503;          /* 매번 똑같이 반복되지 않게 하는 미세한 변화 */
 
   function rnd() {
     rndState = (rndState * 1664525 + 1013904223) >>> 0;
     return rndState / 4294967296;
   }
+  function jit(amt) { return (rnd() - 0.5) * amt; }
 
   /* --------------------------------------------------------- 그래프 만들기 */
   function buildGraph() {
@@ -2927,53 +2933,59 @@ window.__gallery = {
     master.gain.value = 0.0001;
 
     var comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -14;
-    comp.knee.value = 14;
-    comp.ratio.value = 2.6;
-    comp.attack.value = 0.006;
-    comp.release.value = 0.25;
+    comp.threshold.value = -16;
+    comp.knee.value = 18;
+    comp.ratio.value = 2.8;
+    comp.attack.value = 0.008;
+    comp.release.value = 0.28;
 
-    /* 맑은 공간감 1: 짧게 끊기는 잔향 — 음 하나하나가 또렷하게 들리도록 */
-    var wet = ctx.createGain();
-    wet.gain.value = 0.17;
-    var wetLP = ctx.createBiquadFilter();
-    wetLP.type = 'lowpass';
-    wetLP.frequency.value = 5200;
-    var conv = ctx.createConvolver();
-    conv.buffer = makeImpulse(1.25, 3.4);
+    /* 로파이 톤: 저역을 살짝 덜고 3.1kHz 위를 부드럽게 깎는다 */
+    var lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = CUTOFF;
+    lp.Q.value = 0.4;
+    var hpf = ctx.createBiquadFilter();
+    hpf.type = 'highpass';
+    hpf.frequency.value = 55;
 
-    /* 은은한 공간감 2: 아주 옅은 피드백 딜레이(8분음표) */
-    var delay = ctx.createDelay(2);
-    delay.delayTime.value = BEAT * 0.5;
-    var fb = ctx.createGain();
-    fb.gain.value = 0.13;
-    var fbLP = ctx.createBiquadFilter();
-    fbLP.type = 'lowpass';
-    fbLP.frequency.value = 2600;
-    var delayWet = ctx.createGain();
-    delayWet.gain.value = 0.075;
+    var trim = ctx.createGain();
+    trim.gain.value = TRIM;
 
-    /* 전체 톤: 맑고 산뜻하게, 다만 전자음 느낌은 지운다 */
-    var tone = ctx.createBiquadFilter();
-    tone.type = 'lowpass';
-    tone.frequency.value = 7200;
-    tone.Q.value = 0.5;
-
-    master.connect(tone);
-    tone.connect(comp);
+    master.connect(comp);
     comp.connect(ctx.destination);
 
-    tone.connect(conv);
-    conv.connect(wetLP);
-    wetLP.connect(wet);
-    wet.connect(comp);
+    /* 아주 옅은 방 공기 — 낡은 테이프가 방에 울리는 느낌만큼만 */
+    var conv = ctx.createConvolver();
+    conv.buffer = makeImpulse(1.9, 2.6);
+    var revLP = ctx.createBiquadFilter();
+    revLP.type = 'lowpass';
+    revLP.frequency.value = 2800;
+    var revOut = ctx.createGain();
+    revOut.gain.value = 0.16;
+    master.connect(conv);
+    conv.connect(revLP);
+    revLP.connect(revOut);
+    revOut.connect(comp);
 
-    tone.connect(delay);
-    delay.connect(fbLP);
-    fbLP.connect(fb);
-    fb.connect(delay);
-    fbLP.connect(delayWet);
-    delayWet.connect(comp);
+    /* 악기가 모이는 버스 → 하이패스 → 로패스 → 트림 → 마스터 */
+    bodyBus = ctx.createGain();
+    bodyBus.gain.value = 1;
+    bodyBus.connect(hpf);
+    hpf.connect(lp);
+    lp.connect(trim);
+    trim.connect(master);
+
+    /* 테이프 워블: 아주 느린 피치 흔들림(0.24Hz, ±4.5센트) */
+    var lfo = ctx.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.value = 0.24;
+    wobbleGain = ctx.createGain();
+    wobbleGain.gain.value = 4.5;
+    lfo.connect(wobbleGain);
+    lfo.start();
+
+    /* LP 판 잡음 — 바늘 튀는 소리와 지직임을 아주 낮게 */
+    crackle(bodyBus);
 
     return { master: master, comp: comp };
   }
@@ -2983,141 +2995,213 @@ window.__gallery = {
     var rate = ctx.sampleRate;
     var len = Math.max(1, Math.floor(rate * seconds));
     var buf = ctx.createBuffer(2, len, rate);
-    var pre = Math.floor(rate * 0.018);
+    var pre = Math.floor(rate * 0.02);
     for (var ch = 0; ch < 2; ch++) {
       var d = buf.getChannelData(ch);
       for (var i = 0; i < len; i++) {
         if (i < pre) { d[i] = 0; continue; }
         var t = (i - pre) / (len - pre);
-        d[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, decay) * (1 - 0.3 * t);
+        d[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, decay) * (1 - 0.25 * t);
       }
     }
     return buf;
   }
 
-  /* ------------------------------------------------------------ 피아노 한 음 */
-  /* 부드러운 어택 + 긴 릴리즈의 종소리 같은 감쇠. 배음 3개 + 살짝 어긋난 두 대의 현. */
-  function piano(when, midi, dur, vel) {
+  var noiseBuf = null;
+  function noiseBuffer() {
+    if (noiseBuf) return noiseBuf;
+    var len = Math.floor(ctx.sampleRate * 1.5);
+    var buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    noiseBuf = buf;
+    return buf;
+  }
+
+  /* --------------------------------------------------------- 악기: 일렉피아노 */
+  /* 1:1 FM — 변조 지수가 시간에 따라 줄어들며 '뽕' 하고 맑게 떨어진다. */
+  function ep(when, midi, dur, vel) {
     var f = hz(midi);
-    var peak = 0.10 * vel;
-    var tail = Math.max(0.34, dur * 0.9);   /* 음이 남는 시간 — 길게 늘어지지 않게 */
+    var car = ctx.createOscillator();
+    car.type = 'sine';
+    car.frequency.value = f;
+
+    var mod = ctx.createOscillator();
+    mod.type = 'sine';
+    mod.frequency.value = f;
+
+    var idx = ctx.createGain();
+    idx.gain.setValueAtTime(f * 2.3 * vel, when);
+    idx.gain.exponentialRampToValueAtTime(f * 0.16, when + 0.45);
+    mod.connect(idx);
+    idx.connect(car.frequency);
+
+    /* 테이프 워블이 건반에도 살짝 걸린다 */
+    if (wobbleGain) {
+      wobbleGain.connect(car.detune);
+      wobbleGain.connect(mod.detune);
+    }
 
     var g = ctx.createGain();
+    var pk = 0.085 * vel;
     g.gain.setValueAtTime(0.0001, when);
-    g.gain.exponentialRampToValueAtTime(peak, when + 0.006);
-    g.gain.exponentialRampToValueAtTime(Math.max(peak * 0.30, 0.0002), when + 0.16);
-    g.gain.exponentialRampToValueAtTime(Math.max(peak * 0.12, 0.0002), when + tail);
-    g.gain.exponentialRampToValueAtTime(0.0001, when + tail + 0.55);
+    g.gain.exponentialRampToValueAtTime(Math.max(pk, 0.0002), when + 0.01);
+    g.gain.exponentialRampToValueAtTime(Math.max(pk * 0.34, 0.0002), when + 0.85);
+    g.gain.setValueAtTime(Math.max(pk * 0.32, 0.0002), when + Math.max(0.3, dur - 0.12));
+    g.gain.exponentialRampToValueAtTime(0.0001, when + dur + 0.65);
 
-    var lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.Q.value = 0.5;
-    var cut = Math.min(9500, Math.max(2400, f * 7));
-    lp.frequency.setValueAtTime(cut, when);
-    lp.frequency.exponentialRampToValueAtTime(Math.max(1200, cut * 0.45), when + Math.min(0.8, dur + 0.25));
+    car.connect(g);
+    g.connect(bodyBus);
 
-    /* 살짝 어긋난 두 현 → 맑은 두께 */
-    var o1 = ctx.createOscillator();
-    o1.type = 'sine';
-    o1.frequency.value = f;
-    o1.detune.value = -3;
+    var stopAt = when + dur + 0.75;
+    car.start(when); car.stop(stopAt);
+    mod.start(when); mod.stop(stopAt);
+    car.onended = function () { try { g.disconnect(); idx.disconnect(); } catch (e) {} };
+  }
+
+  /* 베이스: 둥근 사인 + 한 옥타브 위 삼각파를 아주 옅게 */
+  function bassNote(when, midi, dur, vel) {
+    var f = hz(midi);
+    var o = ctx.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = f;
     var o2 = ctx.createOscillator();
     o2.type = 'triangle';
-    o2.frequency.value = f;
-    o2.detune.value = 3;
+    o2.frequency.value = f * 2;
     var g2 = ctx.createGain();
-    g2.gain.value = 0.30;
-
-    /* 2·3배음 — 피아노의 밝기, 짧게 반짝이고 사라진다 */
-    var o3 = ctx.createOscillator();
-    o3.type = 'sine';
-    o3.frequency.value = f * 2.001;
-    var g3 = ctx.createGain();
-    g3.gain.setValueAtTime(0.13, when);
-    g3.gain.exponentialRampToValueAtTime(0.0001, when + Math.min(0.4, dur));
-    var o4 = ctx.createOscillator();
-    o4.type = 'sine';
-    o4.frequency.value = f * 3.004;
-    var g4 = ctx.createGain();
-    g4.gain.setValueAtTime(0.055, when);
-    g4.gain.exponentialRampToValueAtTime(0.0001, when + Math.min(0.3, dur));
-
-    o1.connect(lp);
-    o2.connect(g2); g2.connect(lp);
-    o3.connect(g3); g3.connect(lp);
-    o4.connect(g4); g4.connect(lp);
-    lp.connect(g);
-
-    /* 음이 끝난 뒤 노드 정리 */
-    var stopAt = when + tail + 0.65;
-    [o1, o2, o3, o4].forEach(function (o) { o.start(when); o.stop(stopAt); });
-    o1.onended = function () {
-      try { lp.disconnect(); g.disconnect(); } catch (e) {}
-    };
-    g.connect(bodyBus);
-  }
-
-  /* 아주 옅게 깔리는 공기 같은 패드(숨결) — 낮은 저역은 쓰지 않는다 */
-  function pad(when, chord, dur) {
+    g2.gain.value = 0.18;
     var g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, when);
-    g.gain.exponentialRampToValueAtTime(0.0055, when + 0.7);
-    g.gain.setValueAtTime(0.0055, when + dur * 0.7);
-    g.gain.exponentialRampToValueAtTime(0.0001, when + dur + 0.9);
-
-    var lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.value = 2600;
-    lp.Q.value = 0.3;
-    lp.connect(g);
-
-    var oscs = [];
-    chord.slice(2).forEach(function (m, i) {
-      var o = ctx.createOscillator();
-      o.type = 'triangle';
-      o.frequency.value = hz(m);
-      o.detune.value = i % 2 ? 5 : -5;
-      var og = ctx.createGain();
-      og.gain.value = 0.4;
-      o.connect(og); og.connect(lp);
-      oscs.push(o);
-    });
-    oscs.forEach(function (o) { o.start(when); o.stop(when + dur + 1.0); });
-    oscs[0].onended = function () { try { lp.disconnect(); g.disconnect(); } catch (e) {} };
+    g.gain.exponentialRampToValueAtTime(0.16 * vel, when + 0.02);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.05 * vel, 0.0002), when + 0.6);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + dur + 0.25);
+    o.connect(g);
+    o2.connect(g2); g2.connect(g);
     g.connect(bodyBus);
+    o.start(when); o.stop(when + dur + 0.3);
+    o2.start(when); o2.stop(when + dur + 0.3);
+    o.onended = function () { try { g.disconnect(); g2.disconnect(); } catch (e) {} };
   }
 
-  var bodyBus = null;
+  /* ------------------------------------------------------------- 드럼 */
+  function kick(when, vel) {
+    var o = ctx.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(126, when);
+    o.frequency.exponentialRampToValueAtTime(46, when + 0.11);
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(0.5 * vel, when + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + 0.33);
+    o.connect(g); g.connect(bodyBus);
+    o.start(when); o.stop(when + 0.35);
+    o.onended = function () { try { g.disconnect(); } catch (e) {} };
+  }
+
+  function snare(when, vel) {
+    var src = ctx.createBufferSource();
+    src.buffer = noiseBuffer();
+    var bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 1750;
+    bp.Q.value = 0.85;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(0.135 * vel, when + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + 0.17);
+    src.connect(bp); bp.connect(g); g.connect(bodyBus);
+    src.start(when, Math.random() * 1.1, 0.2);
+    src.stop(when + 0.2);
+
+    var o = ctx.createOscillator();
+    o.type = 'triangle';
+    o.frequency.value = 188;
+    var og = ctx.createGain();
+    og.gain.setValueAtTime(0.0001, when);
+    og.gain.exponentialRampToValueAtTime(0.055 * vel, when + 0.004);
+    og.gain.exponentialRampToValueAtTime(0.0001, when + 0.11);
+    o.connect(og); og.connect(bodyBus);
+    o.start(when); o.stop(when + 0.13);
+    o.onended = function () { try { g.disconnect(); og.disconnect(); } catch (e) {} };
+  }
+
+  function hat(when, vel, open) {
+    var src = ctx.createBufferSource();
+    src.buffer = noiseBuffer();
+    var hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 6800;
+    var g = ctx.createGain();
+    var len = open ? 0.24 : 0.055;
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, 0.045 * vel), when + 0.003);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + len);
+    src.connect(hp); hp.connect(g); g.connect(bodyBus);
+    src.start(when, Math.random() * 1.1, len + 0.02);
+    src.stop(when + len + 0.03);
+  }
+
+  /* LP 판 잡음: 바늘 튀는 소리(아주 드물게) + 지직이는 바닥 */
+  function crackle(dest) {
+    var len = Math.floor(ctx.sampleRate * 3);
+    var buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) {
+      d[i] = Math.random() > 0.9993
+        ? (Math.random() * 2 - 1) * 0.85
+        : (Math.random() * 2 - 1) * 0.012;
+    }
+    var src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    var lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 5200;
+    var g = ctx.createGain();
+    g.gain.value = 0.055;
+    src.connect(lp); lp.connect(g); g.connect(dest);
+    src.start(0);
+  }
 
   /* ------------------------------------------------------- 한 사이클 예약 */
-  /* 코드 하나(4박)마다: 가벼운 베이스 + 통통 튀는 아르페지오 + 8분음표 멜로디 */
+  /* 코드 하나(4박)마다: 두 번의 코드 스트로크 + 베이스, 그리고 붐뱁 드럼과 스윙 햇. */
   function scheduleCycle(at) {
-    for (var ci = 0; ci < PROG.length; ci++) {
-      var ch = PROG[ci];
-      var t0 = at + ci * BAR;
-      var jitter = function (amt) { return (rnd() - 0.5) * amt; };
+    for (var i = 0; i < PROG.length; i++) {
+      var ch = PROG[i];
+      var t0 = at + i * BAR;
 
-      /* 베이스: 낮게 무겁게 깔지 않고 한 음만 가볍게 */
-      piano(t0 + jitter(0.008), ch.bass, 0.55, 0.42);
+      /* 1박: 코드 + 첫 번째 킥 */
+      for (var c = 0; c < ch.chord.length; c++) {
+        ep(t0 + jit(0.006), ch.chord[c], 2.1, Math.max(0.2, 0.52 + jit(0.05)));
+      }
+      bassNote(t0, ch.bass, 1.5, 0.75);
+      kick(t0, 0.95);
 
-      /* 아르페지오: 코드톤 + 한 옥타브 위(두 번째 음)를 8분음표로 */
-      var voice = ch.chord.concat([ch.chord[1] + 12]);
-      for (var s = 0; s < 8; s++) {
-        var idx = ch.arp[s];
-        var accent = (s === 0) ? 0.08 : (s === 4 ? 0.05 : 0);
-        var vel = 0.34 + accent + jitter(0.06);
-        if (vel < 0.08) vel = 0.08;
-        piano(t0 + s * (BEAT / 2) + jitter(0.008), voice[idx], BEAT * 0.9, vel);
+      /* 3박(스윙해서 살짝 늦게): 코드 한 번 더 + 다섯도 베이스 + 두 번째 킥 */
+      var t2 = t0 + sw(2.0) * BEAT;
+      for (var c2 = 0; c2 < ch.chord.length; c2++) {
+        ep(t2 + jit(0.006), ch.chord[c2] + (c2 === 3 ? 12 : 0), 1.2, Math.max(0.2, 0.38 + jit(0.05)));
+      }
+      bassNote(t2, ch.bass + 7, 1.1, 0.5);
+      kick(t2, 0.8);
+
+      /* 스네어는 2·4박 */
+      snare(t0 + BEAT, 0.62);
+      snare(t0 + BEAT * 3, 0.7);
+      if (i === 2 || i === 6) kick(t0 + BEAT * 3.25, 0.45);
+
+      /* 8분음표 햇, 스윙. 가끔 마지막 햇을 열어 숨을 틔운다 */
+      for (var h = 0; h < 8; h++) {
+        var pos = h * 0.5;
+        var open = (h === 7 && i % 2 === 1);
+        hat(t0 + sw(pos) * BEAT + jit(0.004), open ? 0.5 : (h % 2 === 0 ? 0.55 : 0.34), open);
       }
 
-      /* 멜로디: C4~E5의 밝은 8분음표 프레이즈 (상행 → 짧게 쉬고 다시) */
+      /* 짧은 멜로디 프레이즈 — 코드 사이를 살짝 비집고 나오는 몇 음 */
       for (var m = 0; m < ch.mel.length; m++) {
         var e = ch.mel[m];
-        piano(t0 + e[0] * (BEAT / 2) + jitter(0.008), e[1], e[2] * BEAT, e[3]);
+        ep(t0 + sw(e[0]) * BEAT + jit(0.01), e[1], e[2] * BEAT, Math.max(0.2, e[3]));
       }
-
-      /* 아주 옅은 패드 */
-      pad(t0, ch.chord, BAR);
     }
   }
 
@@ -3129,7 +3213,6 @@ window.__gallery = {
     while (nextCycle < now + 4.5 && guard++ < 4) {
       scheduleCycle(nextCycle);
       nextCycle += CYCLE;
-      lastCycleIdx++;
     }
   }
 
@@ -3170,7 +3253,7 @@ window.__gallery = {
       try { var pr = ctx.resume(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
     }
     if (active()) {
-      nextCycle = ctx.currentTime + 0.08;   /* 풀릴 때는 새 마디부터 자연스럽게 */
+      nextCycle = ctx.currentTime + 0.08;   /* 풂 때는 새 마디부터 자연스럽게 */
       startPump();
       rampGain(0.9);
     } else {
@@ -3193,10 +3276,7 @@ window.__gallery = {
     if (ctx) return true;
     try {
       ctx = new AC();
-      buildGraph();                     /* master → 톤 → 컴프레서 → 출력 */
-      bodyBus = ctx.createGain();
-      bodyBus.gain.value = 1;
-      bodyBus.connect(master);          /* 모든 악기 소리는 여기로 모인다 */
+      buildGraph();                     /* 악기 → 로패스 → 컴프레서 → 출력 */
     } catch (err) {
       ctx = null;
       return false;
@@ -3210,17 +3290,17 @@ window.__gallery = {
     ducked = false;
     paint();
     /* iOS Safari: resume()이 끝난 뒤(오디오 시계가 흐르기 시작한 뒤) 첫 마디를 예약한다 */
-    var kick = function () {
+    var kickStart = function () {
       if (!on || !ctx) return;
       nextCycle = ctx.currentTime + 0.15;
       refresh();
     };
     if (ctx.state === 'suspended' && ctx.resume) {
-      try { ctx.resume().then(kick).catch(kick); } catch (e) { kick(); }
+      try { ctx.resume().then(kickStart).catch(kickStart); } catch (e) { kickStart(); }
     } else {
-      kick();
+      kickStart();
     }
-    say('BGM 켜짐 · 밝은 피아노가 흐릅니다 🎵');
+    say('BGM 켜짐 · 몽글몽글한 로파이가 흐릅니다 ☕️');
   }
 
   function turnOff() {
