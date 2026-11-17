@@ -3445,13 +3445,28 @@ function drawLyricCard(item) {
     const out = [];
     for (const raw of item.lines) {
       if (ctx.measureText(raw).width <= maxW) { out.push(raw); continue; }
+      const chunks = [];
       let cur = '';
       for (const word of raw.split(' ')) {
         const t = cur ? cur + ' ' + word : word;
-        if (cur && ctx.measureText(t).width > maxW) { out.push(cur); cur = word; }
+        if (cur && ctx.measureText(t).width > maxW) { chunks.push(cur); cur = word; }
         else cur = t;
       }
-      if (cur) out.push(cur);
+      if (cur) chunks.push(cur);
+      // 마지막 줄에 단어 하나만 남으면 앞 줄에서 단어를 넘겨 두 줄을 고르게 나눈다
+      for (let guard = 0; guard < 6; guard++) {
+        const n = chunks.length;
+        if (n < 2) break;
+        if (ctx.measureText(chunks[n - 1]).width >= maxW * 0.34) break;
+        const prev = chunks[n - 2].split(' ');
+        if (prev.length < 2) break;
+        const moved = prev.pop();
+        const cand = moved + ' ' + chunks[n - 1];
+        if (ctx.measureText(cand).width > maxW) break;
+        chunks[n - 2] = prev.join(' ');
+        chunks[n - 1] = cand;
+      }
+      for (const c2 of chunks) out.push(c2);
     }
     return out;
   }
@@ -3461,6 +3476,7 @@ function drawLyricCard(item) {
     wrapped = wrapAt(fs);
     if (wrapped.length <= 6 && (wrapped.length - 1) * fs * 1.55 <= 340) break;
     fs -= 2;
+    wrapped = wrapAt(fs);
   }
   const lh = Math.round(fs * 1.55);
   const n = wrapped.length;
