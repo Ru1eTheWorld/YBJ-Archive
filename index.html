@@ -1578,12 +1578,23 @@ function makeSignTexture() {
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = 'rgba(150,118,70,.92)';
-  ctx.font = `700 15px ${KR_FONT}`;
-  const label = '찍덕 EXHIBITION';
-  const gap = 5;
-  let lw = -gap;
-  for (const ch of label) lw += ctx.measureText(ch).width + gap;
-  drawSpaced(ctx, label, (W - lw) / 2, 112, gap);
+  // 한글 타이틀 '임재범 40주년 찍덕 전시관' — 판 폭에 맞춰 글자 크기·자간을 줄여가며 한 줄로 중앙 정렬
+  const label = '임재범 40주년 찍덕 전시관';
+  const labelMax = W - 96;
+  let lfs = 21;
+  let gap = 4;
+  const labelWidth = () => {
+    let w = -gap;
+    for (const ch of label) w += ctx.measureText(ch).width + gap;
+    return w;
+  };
+  ctx.font = `700 ${lfs}px ${KR_FONT}`;
+  while (lfs > 12 && labelWidth() > labelMax) {
+    lfs -= 1;
+    gap = lfs >= 17 ? 4 : 2.5;
+    ctx.font = `700 ${lfs}px ${KR_FONT}`;
+  }
+  drawSpaced(ctx, label, (W - labelWidth()) / 2, 112, gap);
 
   ctx.textAlign = 'center';
   ctx.fillStyle = '#2a2118';
