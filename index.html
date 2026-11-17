@@ -662,7 +662,7 @@
     <div class="eyebrow">Admission Ticket</div>
     <h2 id="tkTitle">나만의 전시회 티켓 🎫</h2>
     <p class="gb-sub">닉네임을 넣으면 40주년 기념 입장권이 바로 만들어져요. 비워두면 <b>VIP GUEST</b>로 발급돼요.</p>
-    <div class="tk-stage"><img id="tkImg" alt="임재범 40주년 찍덕 전시관 입장권"></div>
+    <div class="tk-stage"><img id="tkImg" alt="임재범 찍덕 전시관 입장권"></div>
     <div class="tk-row">
       <input type="text" id="tkNick" maxlength="18" placeholder="닉네임 (예: Ru1eTheWorld)" aria-label="닉네임" autocomplete="nickname" enterkeyhint="done">
       <button type="button" class="btn primary" id="tkMake">새 번호로 다시</button>
@@ -1656,8 +1656,8 @@ function makeSignTexture() {
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = 'rgba(150,118,70,.92)';
-  // 한글 타이틀 '임재범 40주년 찍덕 전시관' — 판 폭에 맞춰 글자 크기·자간을 줄여가며 한 줄로 중앙 정렬
-  const label = '임재범 40주년 찍덕 전시관';
+  // 한글 타이틀 '임재범 찍덕 전시관' — 판 폭에 맞춰 글자 크기·자간을 줄여가며 한 줄로 중앙 정렬
+  const label = '임재범 찍덕 전시관';
   const labelMax = W - 96;
   let lfs = 21;
   let gap = 4;
@@ -3585,10 +3585,10 @@ function drawTicket(nick) {
   ctx.font = `800 13px ${KR_FONT}`;
   drawSpaced(ctx, 'RU1ETHEWORLD  ·  40TH ANNIVERSARY', 92, 104, 2.4);
 
-  // 타이틀
+  // 타이틀 — '임재범' / '찍덕 전시관' 두 줄
   ctx.fillStyle = '#f8eeda';
   ctx.font = `700 44px ${KR_FONT}`;
-  ctx.fillText('임재범 40주년', 92, 188);
+  drawSpaced(ctx, '임재범', 92, 188, 6);
   ctx.font = `800 62px ${KR_FONT}`;
   ctx.fillText('찍덕 전시관', 92, 258);
 
@@ -3706,7 +3706,7 @@ function renderTicket() {
   const nick = typed || 'VIP GUEST';
   ticketImageUrl = drawTicket(nick);
   ticketImg.src = ticketImageUrl;
-  ticketImg.alt = nick + '님의 임재범 40주년 찍덕 전시관 입장권';
+  ticketImg.alt = nick + '님의 임재범 찍덕 전시관 입장권';
 }
 
 function openTicket() {
