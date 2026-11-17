@@ -492,6 +492,93 @@
     .btn.primary{padding:7px 8px;}
   }
 
+  /* ---------- 🎬 자동 투어 · 📸 포토존 인증샷 ---------- */
+  .iconbtn.tour{position:relative;}
+  .iconbtn.tour.on{
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));color:var(--accent-fg);
+    border-color:transparent;box-shadow:0 8px 22px rgba(122,92,240,.34);
+  }
+  .iconbtn.tour.on .tour-ico{display:inline-block;animation:tourbob 2.6s ease-in-out infinite;}
+  @keyframes tourbob{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-2px) scale(1.06);}}
+
+  #photo{z-index:43;}
+  #photo .card{max-width:min(600px,94vw);gap:12px;}
+  .pz-stage{
+    border-radius:18px;overflow:hidden;background:rgba(127,127,127,.10);
+    display:flex;align-items:center;justify-content:center;min-height:120px;
+  }
+  .pz-stage img{
+    display:block;width:auto;height:auto;max-width:100%;max-height:62dvh;
+    object-fit:contain;border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.28);
+    touch-action:manipulation;
+  }
+  .pz-note{font-size:10.5px;color:var(--muted);line-height:1.6;margin:0;text-align:center;}
+  #photo .btn.enter{padding:13px;border-radius:14px;font-size:13px;}
+
+  /* 상단 툴바 한 줄 유지 — 전시관 이름은 남는 만큼만 쓰고 버튼은 절대 찌그러지지 않는다 */
+  .brand{flex:1 1 auto;min-width:0;}
+  .brand b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .seg button .seg-short{display:none;}
+  @media (max-width:520px){
+    .seg button .seg-long{display:none;}
+    .seg button .seg-short{display:inline;}
+  }
+  @media (max-width:430px){
+    .topbar{gap:3px;padding-left:8px;padding-right:8px;}
+    .brand{display:flex;max-width:88px;}
+    .brand b{max-width:none;font-size:9.5px;letter-spacing:-.1px;}
+    .seg{padding:1px;}
+    .seg button{font-size:9px;padding:5px 6px;letter-spacing:-.3px;}
+    .iconbtn,.iconbtn.bgm,.iconbtn.gb,.iconbtn.tour,.iconbtn.shot{width:30px;height:30px;font-size:12.5px;}
+    .iconbtn.ticket{width:29px;height:29px;font-size:12.5px;}
+    .btn.primary{padding:7px 8px;}
+    .btn.primary .plus{font-size:14px;}
+  }
+  /* ---------- 🔮 가사 뽑기 · ✈️ 종이비행기 (하단 플로팅) ---------- */
+  #quickbar{
+    position:fixed;z-index:17;right:calc(14px + env(safe-area-inset-right));
+    bottom:calc(16px + env(safe-area-inset-bottom));
+    display:flex;flex-direction:column;align-items:flex-end;gap:8px;
+  }
+  .pill{
+    appearance:none;font:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+    font-size:11.5px;font-weight:800;letter-spacing:-.2px;white-space:nowrap;
+    padding:9px 14px;border-radius:999px;border:1px solid var(--line);color:var(--fg);
+    background:var(--card);backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);
+    box-shadow:0 8px 22px rgba(0,0,0,.12);
+    transition:transform .15s ease,background .25s ease,box-shadow .25s ease;
+  }
+  .pill:active{transform:scale(.96);}
+  .pill .p-ico{font-size:13px;line-height:1;}
+  .pill.lyric{border-color:rgba(150,120,240,.42);box-shadow:0 8px 22px rgba(110,84,210,.20);}
+  .pill.plane{border-color:rgba(206,168,104,.48);box-shadow:0 8px 22px rgba(180,140,70,.18);}
+  body.dark .pill.lyric{background:rgba(38,30,60,.78);}
+  body.dark .pill.plane{background:rgba(46,36,22,.78);}
+  @media (max-width:430px){
+    #quickbar{right:calc(10px + env(safe-area-inset-right));bottom:calc(12px + env(safe-area-inset-bottom));gap:6px;}
+    .pill{font-size:10.5px;padding:8px 12px;}
+    .pill .p-ico{font-size:12px;}
+  }
+
+  #lyric{z-index:44;}
+  #lyric .card{max-width:min(560px,94vw);gap:12px;}
+  #lyric .row .btn{padding:12px;font-size:12.5px;font-weight:800;}
+  #plane{z-index:44;}
+  #plane .card{max-width:min(520px,94vw);gap:12px;}
+  #plane input[type=text]{
+    width:100%;font:inherit;font-size:13.5px;color:var(--fg);background:rgba(127,127,127,.07);
+    border:1px solid var(--line);border-radius:12px;padding:12px;outline:none;
+    transition:border-color .2s ease,box-shadow .2s ease;
+  }
+  #plane input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(122,92,240,.16);}
+
+  @media (max-width:360px){
+    .topbar{gap:2px;padding-left:7px;padding-right:7px;}
+    .seg button{font-size:8.5px;padding:4px 5px;}
+    .iconbtn,.iconbtn.bgm,.iconbtn.gb,.iconbtn.tour,.iconbtn.shot{width:28px;height:28px;font-size:12px;}
+    .iconbtn.ticket{width:27px;height:27px;font-size:12px;}
+  }
+
 </style>
 </head>
 <body>
@@ -505,8 +592,8 @@
     <span>Photo Exhibition</span>
   </div>
   <div class="seg" role="group" aria-label="분위기 전환">
-    <button type="button" id="themeLight" class="on">밝은 전시관</button>
-    <button type="button" id="themeDark">어두운 무드</button>
+    <button type="button" id="themeLight" class="on"><span class="seg-long">밝은 전시관</span><span class="seg-short">밝은</span></button>
+    <button type="button" id="themeDark"><span class="seg-long">어두운 무드</span><span class="seg-short">어두운</span></button>
   </div>
   <button type="button" class="iconbtn bgm" id="btnBgm" title="배경음악 켜기" aria-label="배경음악 켜기" aria-pressed="false" data-state="off">
     <span class="bgm-ico" aria-hidden="true">🎵</span><span class="bgm-lbl">BGM</span>
@@ -515,6 +602,10 @@
     <span class="gb-ico" aria-hidden="true">✍️</span><span class="gb-lbl">방명록</span>
   </button>
   <button type="button" class="iconbtn ticket" id="btnTicket" title="나만의 전시회 티켓" aria-label="나만의 전시회 티켓 발급" aria-haspopup="dialog">🎫</button>
+  <button type="button" class="iconbtn tour" id="btnTour" title="자동 투어" aria-label="자동 투어 시작" aria-pressed="false">
+    <span class="tour-ico" aria-hidden="true">🎬</span>
+  </button>
+  <button type="button" class="iconbtn shot" id="btnShot" title="포토존 인증샷" aria-label="포토존 인증샷 찍기" aria-haspopup="dialog">📸</button>
   <button type="button" class="iconbtn" id="btnReset" title="처음 자리로" aria-label="처음 자리로">⟲</button>
   <button type="button" class="btn primary" id="btnUpload">
     <span class="plus">＋</span><span class="lbl">내 사진 걸기</span>
@@ -524,6 +615,15 @@
 <div id="nearby"></div>
 <div id="hint"></div>
 <button type="button" id="videoKick" hidden aria-label="벽 영상 다시 재생">▶ 벽 영상 재생</button>
+
+<div id="quickbar">
+  <button type="button" class="pill lyric" id="btnLyric" aria-haspopup="dialog" title="오늘의 임재범 가사 뽑기">
+    <span class="p-ico" aria-hidden="true">🔮</span><span>가사 뽑기</span>
+  </button>
+  <button type="button" class="pill plane" id="btnPlane" aria-haspopup="dialog" title="응원 종이비행기 날리기">
+    <span class="p-ico" aria-hidden="true">✈️</span><span>비행기 날리기</span>
+  </button>
+</div>
 
 <div id="stick" aria-hidden="true">
   <div class="stick-base" id="stickBase">
@@ -669,6 +769,51 @@
     </div>
     <button type="button" class="btn enter" id="tkSave">티켓 이미지 저장 💾</button>
     <p class="tk-note">아이폰 사파리에서는 위 티켓을 길게 눌러 ‘사진에 저장’해도 돼요.</p>
+  </div>
+</div>
+
+<!-- 📸 포토존 인증샷 -->
+<div class="overlay hidden" id="photo" aria-hidden="true">
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="pzTitle">
+    <button type="button" class="closebtn" id="pzClose" aria-label="닫기">✕</button>
+    <div class="eyebrow">Photo Zone</div>
+    <h2 id="pzTitle">포토존 인증샷 📸</h2>
+    <p class="gb-sub">지금 이 전시장을 그대로 담았어요. 저장해서 자랑해 보세요.</p>
+    <div class="pz-stage"><img id="pzImg" alt="임재범 찍덕 전시관 포토존 인증샷"></div>
+    <button type="button" class="btn enter" id="pzSave">인증샷 저장 💾</button>
+    <p class="pz-note">아이폰 사파리에서는 위 사진을 길게 눌러 ‘사진에 저장’해도 돼요.</p>
+  </div>
+</div>
+
+<!-- 🔮 오늘의 가사 뽑기 -->
+<div class="overlay hidden" id="lyric" aria-hidden="true">
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="lyTitle">
+    <button type="button" class="closebtn" id="lyClose" aria-label="닫기">✕</button>
+    <div class="eyebrow">Today’s Lyric</div>
+    <h2 id="lyTitle">오늘의 임재범 가사 🔮</h2>
+    <p class="gb-sub">오늘 마음에 닿을 한 소절을 뽑았어요.</p>
+    <div class="pz-stage"><img id="lyImg" alt="오늘의 임재범 가사 카드"></div>
+    <div class="row">
+      <button type="button" class="btn ghost" id="lyAgain">다시 뽑기</button>
+      <button type="button" class="btn primary" id="lySave">카드 저장 💾</button>
+    </div>
+    <p class="pz-note">아이폰 사파리에서는 위 카드를 길게 눌러 ‘사진에 저장’해도 돼요.</p>
+  </div>
+</div>
+
+<!-- ✈️ 응원 종이비행기 -->
+<div class="overlay hidden" id="plane" aria-hidden="true">
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="plTitle">
+    <button type="button" class="closebtn" id="plClose" aria-label="닫기">✕</button>
+    <div class="eyebrow">Paper Plane</div>
+    <h2 id="plTitle">응원 종이비행기 ✈️</h2>
+    <p class="gb-sub">하고 싶은 응원 한 줄을 적어 하늘로 날려 보세요. 비워두면 기본 응원이 담겨 날아가요.</p>
+    <div class="field">
+      <label for="plMsg">응원 문구</label>
+      <input type="text" id="plMsg" maxlength="60" placeholder="오늘도 변함없이 응원해요 🤎" autocomplete="off" enterkeyhint="send">
+    </div>
+    <button type="button" class="btn enter" id="plSend">날리기 ✈️</button>
+    <p class="pz-note">날아간 비행기를 탭하면 적은 문구가 다시 보여요.</p>
   </div>
 </div>
 
@@ -1874,7 +2019,10 @@ const THEMES = {
 const canvasEl = $('scene');
 let renderer;
 try {
-  renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: true, powerPreference: 'high-performance' });
+  renderer = new THREE.WebGLRenderer({
+    canvas: canvasEl, antialias: true, powerPreference: 'high-performance',
+    preserveDrawingBuffer: true   // 📸 인증샷 캡처가 빈 화면으로 나오지 않게
+  });
 } catch (e) {
   $('loading').classList.add('done');
   $('fatal').classList.add('show');
@@ -2482,6 +2630,183 @@ goldDust.frustumCulled = false;
 scene.add(goldDust);
 let dustT = 0;
 
+/* ------------------------------------------- 🎆 콘서트 밤하늘 (어두운 무드 전용)
+   천장에 은은하게 반짝이는 별빛과, 응원봉 같은 보라·골드·화이트 빛가루.
+   밝은 전시관으로 돌아오면 별빛·빛가루가 서서히 사라져 기존 밝은 무드를 그대로 둔다. */
+function makeStarTexture() {
+  const s = 64;
+  const c = makeCanvas(s, s);
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  g.addColorStop(0, 'rgba(255,255,255,1)');
+  g.addColorStop(0.16, 'rgba(255,252,244,.92)');
+  g.addColorStop(0.44, 'rgba(255,246,226,.26)');
+  g.addColorStop(1, 'rgba(255,240,214,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, s, s);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+function makeBokehTexture() {
+  const s = 128;
+  const c = makeCanvas(s, s);
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  g.addColorStop(0, 'rgba(255,255,255,.82)');
+  g.addColorStop(0.32, 'rgba(255,255,255,.40)');
+  g.addColorStop(0.74, 'rgba(255,255,255,.11)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, s, s);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+function makeNightSkyTexture() {
+  const W = 512, H = 660;
+  const c = makeCanvas(W, H);
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(W * 0.5, H * 0.42, 30, W * 0.5, H * 0.5, Math.max(W, H) * 0.66);
+  g.addColorStop(0, 'rgba(56,42,112,.92)');
+  g.addColorStop(0.45, 'rgba(22,18,52,.52)');
+  g.addColorStop(1, 'rgba(8,8,20,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  // 은하수 띠
+  ctx.save();
+  ctx.translate(W / 2, H / 2);
+  ctx.rotate(-0.24);
+  const band = ctx.createLinearGradient(0, -96, 0, 96);
+  band.addColorStop(0, 'rgba(126,102,206,0)');
+  band.addColorStop(0.5, 'rgba(158,136,240,.30)');
+  band.addColorStop(1, 'rgba(126,102,206,0)');
+  ctx.fillStyle = band;
+  ctx.fillRect(-W * 0.8, -96, W * 1.6, 192);
+  ctx.restore();
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+const nightSkyMat = new THREE.MeshBasicMaterial({
+  map: makeNightSkyTexture(), transparent: true, opacity: 0,
+  blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false
+});
+const nightSkyMesh = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.w - 0.08, ROOM.d - 0.08), nightSkyMat);
+nightSkyMesh.rotation.x = Math.PI / 2;
+nightSkyMesh.position.set(0, ROOM.h - 0.014, 0);
+nightSkyMesh.name = 'nightSky';
+nightSkyMesh.frustumCulled = false;
+nightSkyMesh.visible = false;
+scene.add(nightSkyMesh);
+
+const STAR_TEX = makeStarTexture();
+const BOKEH_TEX = makeBokehTexture();
+const STAR_TINTS = [0xfff8ec, 0xfff8ec, 0xfff1d6, 0xffd79a, 0xd9c8ff];
+const STAR_LAYERS = [];
+function buildStarLayer(count, size, base, phase, spread) {
+  const pos = new Float32Array(count * 3);
+  const col = new Float32Array(count * 3);
+  const tint = new THREE.Color();
+  for (let i = 0; i < count; i++) {
+    const i3 = i * 3;
+    pos[i3] = (Math.random() - 0.5) * (ROOM.w - 0.6);
+    pos[i3 + 1] = ROOM.h - 0.025 - Math.random() * spread;
+    pos[i3 + 2] = (Math.random() - 0.5) * (ROOM.d - 0.6);
+    tint.setHex(STAR_TINTS[(Math.random() * STAR_TINTS.length) | 0]);
+    col[i3] = tint.r; col[i3 + 1] = tint.g; col[i3 + 2] = tint.b;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const mat = new THREE.PointsMaterial({
+    size, map: STAR_TEX, vertexColors: true, transparent: true, opacity: 0,
+    blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true, fog: false
+  });
+  const pts = new THREE.Points(geo, mat);
+  pts.name = 'starlight' + STAR_LAYERS.length;
+  pts.frustumCulled = false;
+  pts.visible = false;
+  scene.add(pts);
+  STAR_LAYERS.push({ pts, mat, base, phase });
+  return pts;
+}
+buildStarLayer(210, 0.042, 0.85, 0.0, 0.10);
+buildStarLayer(112, 0.068, 0.74, 1.7, 0.08);
+buildStarLayer(42, 0.115, 0.92, 3.1, 0.05);
+
+// 응원봉 빛가루 — 보라·골드·화이트가 천천히 흩날린다
+const BOKEH_COUNT = 132;
+const BOKEH_TINTS = [0xc7b4ff, 0xb9a6ff, 0xa892ff, 0xffcf87, 0xffe6b8, 0xfff7ea];
+const bokPos = new Float32Array(BOKEH_COUNT * 3);
+const bokVel = new Float32Array(BOKEH_COUNT);
+const bokPhase = new Float32Array(BOKEH_COUNT);
+const bokCol = new Float32Array(BOKEH_COUNT * 3);
+{
+  const tint = new THREE.Color();
+  for (let i = 0; i < BOKEH_COUNT; i++) {
+    const i3 = i * 3;
+    bokPos[i3] = (Math.random() - 0.5) * (ROOM.w - 1.4);
+    bokPos[i3 + 1] = 0.3 + Math.random() * (ROOM.h - 0.6);
+    bokPos[i3 + 2] = (Math.random() - 0.5) * (ROOM.d - 1.4);
+    bokVel[i] = 0.02 + Math.random() * 0.055;
+    bokPhase[i] = Math.random() * Math.PI * 2;
+    tint.setHex(BOKEH_TINTS[(Math.random() * BOKEH_TINTS.length) | 0]);
+    bokCol[i3] = tint.r; bokCol[i3 + 1] = tint.g; bokCol[i3 + 2] = tint.b;
+  }
+}
+const bokGeo = new THREE.BufferGeometry();
+bokGeo.setAttribute('position', new THREE.BufferAttribute(bokPos, 3));
+bokGeo.setAttribute('color', new THREE.BufferAttribute(bokCol, 3));
+const bokMat = new THREE.PointsMaterial({
+  size: 0.145, map: BOKEH_TEX, vertexColors: true, transparent: true, opacity: 0,
+  blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true, fog: false
+});
+const bokPoints = new THREE.Points(bokGeo, bokMat);
+bokPoints.name = 'concertBokeh';
+bokPoints.frustumCulled = false;
+bokPoints.visible = false;
+scene.add(bokPoints);
+
+let starT = 0;
+let starlightFade = 0;
+function updateStarlight(dt) {
+  const target = currentTheme === 'dark' ? 1 : 0;
+  // 별빛은 천천히 떠오르고, 밝은 전시관으로 돌아갈 때는 조금 더 빨리 걷힌다
+  starlightFade = lerp(starlightFade, target, 1 - Math.exp(-dt * (target ? 1.5 : 3.0)));
+  const on = starlightFade > 0.004;
+  nightSkyMesh.visible = on;
+  nightSkyMat.opacity = starlightFade * 0.34;
+  if (!on) {
+    for (const L of STAR_LAYERS) L.pts.visible = false;
+    bokPoints.visible = false;
+    return;
+  }
+  starT += dt;
+  for (let i = 0; i < STAR_LAYERS.length; i++) {
+    const L = STAR_LAYERS[i];
+    L.pts.visible = true;
+    const tw = 0.74 + 0.26 * Math.sin(starT * (0.85 + i * 0.5) + L.phase);
+    L.mat.opacity = L.base * starlightFade * tw;
+  }
+  bokPoints.visible = true;
+  bokMat.opacity = starlightFade * 0.60;
+  const bp = bokGeo.attributes.position.array;
+  for (let i = 0; i < BOKEH_COUNT; i++) {
+    const i3 = i * 3;
+    bp[i3 + 1] += bokVel[i] * dt;
+    bp[i3] += Math.sin(starT * 0.5 + bokPhase[i]) * 0.1 * dt;
+    bp[i3 + 2] += Math.cos(starT * 0.42 + bokPhase[i]) * 0.1 * dt;
+    if (bp[i3 + 1] > ROOM.h - 0.14) {
+      bp[i3 + 1] = 0.28;
+      bp[i3] = (Math.random() - 0.5) * (ROOM.w - 1.4);
+      bp[i3 + 2] = (Math.random() - 0.5) * (ROOM.d - 1.4);
+    }
+  }
+  bokGeo.attributes.position.needsUpdate = true;
+}
+
 /* --------------------------------------------------------------- frames */
 // 액자 크기는 사진의 실제 비율을 따른다 (긴 변 = ART_UNIT)
 function photoBox(data) {
@@ -2778,6 +3103,647 @@ function refreshPlaque(frameObj) {
 const photoImgs = await Promise.all(PHOTOS.map((p) => (p.poster ? loadSrc(p.poster) : (p.video ? Promise.resolve(null) : loadSrc(p.src)))));
 PHOTOS.forEach((data, i) => buildFrame(i, WALL_SPECS[i], data, photoImgs[i]));
 
+/* ------------------------------------------------------------- 🎬 자동 투어
+   1번 → 10번 액자 → 마지막 남쪽 현수막 정면을 순서대로 산책한다.
+   화면 드래그·터치, 이동 키, 조이스틱, 🎬 버튼 재탭, Esc 어느 쪽이든 즉시 멈춘다. */
+const TOUR_D = 2.5;          // 액자 앞에서 서는 거리(m)
+const TOUR_BANNER_D = 4.9;   // 큰 현수막은 조금 더 뒤에서
+const TOUR_HOLD = 2.4;       // 한 작품 앞에서 머무는 시간(초)
+const tourStops = [];
+function buildTourStops() {
+  tourStops.length = 0;
+  for (const f of frames) {
+    const wall = f.spec.wall;
+    const n = wall === 'back' ? { x: 0, z: 1 } : wall === 'right' ? { x: -1, z: 0 } : { x: 1, z: 0 };
+    tourStops.push({
+      x: clamp(f.worldPos.x + n.x * TOUR_D, -ROOM.w / 2 + PLAYER_R + 0.1, ROOM.w / 2 - PLAYER_R - 0.1),
+      z: clamp(f.worldPos.z + n.z * TOUR_D, -ROOM.d / 2 + PLAYER_R + 0.1, ROOM.d / 2 - PLAYER_R - 0.1),
+      yaw: Math.atan2(n.x, n.z),
+      pitch: Math.atan2(f.worldPos.y - EYE, TOUR_D),
+      label: String(f.index + 1).padStart(2, '0') + ' · ' + (f.data.title || '작품'),
+      hold: TOUR_HOLD
+    });
+  }
+  tourStops.push({
+    x: 0, z: bannerZ - TOUR_BANNER_D, yaw: Math.PI,
+    pitch: Math.atan2(bannerY - EYE, TOUR_BANNER_D),
+    label: 'SOUTH · 현수막', hold: TOUR_HOLD + 0.8
+  });
+}
+let tourActive = false;
+let tourStep = 0;
+let tourPhase = 'move';
+let tourT = 0;
+let tourDur = 2;
+const tourFrom = { x: 0, z: 0, yaw: 0, pitch: 0 };
+const tourBtn = $('btnTour');
+
+function angDelta(a, b) {
+  let d = (b - a) % (Math.PI * 2);
+  if (d > Math.PI) d -= Math.PI * 2;
+  if (d < -Math.PI) d += Math.PI * 2;
+  return d;
+}
+function tourSetButton(on) {
+  tourBtn.classList.toggle('on', on);
+  tourBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  tourBtn.title = on ? '자동 투어 멈추기' : '자동 투어';
+  tourBtn.setAttribute('aria-label', on ? '자동 투어 멈추기' : '자동 투어 시작');
+}
+function tourGoto(i) {
+  const s = tourStops[i];
+  if (!s) { stopTour(false); return; }
+  tourFrom.x = player.x; tourFrom.z = player.z;
+  tourFrom.yaw = yaw; tourFrom.pitch = pitch;
+  const dist = Math.hypot(s.x - player.x, s.z - player.z);
+  tourDur = clamp(1.5 + dist * 0.42, 1.8, 4.4);
+  tourStep = i;
+  tourT = 0;
+  tourPhase = 'move';
+}
+function startTour() {
+  if (paused) closeAll();
+  buildTourStops();
+  if (!tourStops.length) return;
+  tourActive = true;
+  tourSetButton(true);
+  velocity.set(0, 0, 0);
+  resetStick();
+  hideHint();
+  keys.clear();
+  tourGoto(0);
+  toast('🎬 자동 투어 시작 · 화면을 만지면 멈춰요');
+}
+function stopTour(announce) {
+  if (!tourActive) return;
+  tourActive = false;
+  tourSetButton(false);
+  velocity.set(0, 0, 0);
+  if (announce) toast('🎬 자동 투어를 멈췄어요');
+}
+function updateTour(dt) {
+  if (paused) { stopTour(false); return; }   // 방명록·티켓 등 다른 창이 열리면 투어도 멈춘다
+  const s = tourStops[tourStep];
+  if (!s) { stopTour(false); return; }
+  tourT += dt;
+  if (tourPhase === 'move') {
+    const p = clamp(tourT / tourDur, 0, 1);
+    const e = p * p * (3 - 2 * p);
+    player.x = lerp(tourFrom.x, s.x, e);
+    player.z = lerp(tourFrom.z, s.z, e);
+    yaw = tourFrom.yaw + angDelta(tourFrom.yaw, s.yaw) * e;
+    pitch = lerp(tourFrom.pitch, s.pitch, e);
+    if (p >= 1) { tourPhase = 'dwell'; tourT = 0; }
+    return;
+  }
+  // 감상 중 — 살짝 다가갔다 물러나며 시선을 아주 천천히 흔든다
+  const holdP = Math.min(1, tourT / s.hold);
+  const push = Math.sin(holdP * Math.PI) * 0.1;
+  player.x = s.x - Math.sin(s.yaw) * push;
+  player.z = s.z - Math.cos(s.yaw) * push;
+  yaw = s.yaw + Math.sin(tourT * 0.55) * 0.028;
+  pitch = s.pitch + Math.sin(tourT * 0.42 + 0.7) * 0.01;
+  if (tourT >= s.hold) {
+    if (tourStep + 1 < tourStops.length) tourGoto(tourStep + 1);
+    else { stopTour(false); toast('🎬 자동 투어 끝 · 다시 누르면 처음부터'); }
+  }
+}
+tourBtn.addEventListener('click', () => {
+  if (tourActive) stopTour(true);
+  else startTour();
+});
+
+/* ----------------------------------------------------- 📸 포토존 인증샷
+   지금 화면(WebGL 캔버스)을 그대로 담아 전시회 폴라로이드 프레임을 입힌다.
+   프레임에는 전시관 이름·Ru1eTheWorld·오늘 날짜·YBJ 인장만 — 개인정보는 넣지 않는다. */
+const photoEl = $('photo');
+const pzImg = $('pzImg');
+let photoUrl = '';
+function drawPhotoFrame(source) {
+  const pad = 54;                      // 사진 둘레 여백
+  const band = 178;                    // 아래 캡션 띠
+  let pw = 972;
+  let ph = pw * (source.height / source.width);
+  const MAX_H = 1400;
+  if (ph > MAX_H) { const s = MAX_H / ph; ph = MAX_H; pw = pw * s; }
+  const W = Math.round(pw + pad * 2);
+  const H = Math.round(pad + ph + band);
+  const c = makeCanvas(W, H);
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  // 종이
+  ctx.save();
+  rr(ctx, 0, 0, W, H, 20);
+  ctx.clip();
+  const paper = ctx.createLinearGradient(0, 0, W * 0.4, H);
+  paper.addColorStop(0, '#fffdf7');
+  paper.addColorStop(0.55, '#f8f1e3');
+  paper.addColorStop(1, '#efe4d2');
+  ctx.fillStyle = paper;
+  ctx.fillRect(0, 0, W, H);
+  grain(ctx, W, H, 2400, 0.05);
+  // 아래 띠에 옅은 골드 라인
+  const rule = ctx.createLinearGradient(pad, 0, W - pad, 0);
+  rule.addColorStop(0, 'rgba(198,160,96,.55)');
+  rule.addColorStop(0.6, 'rgba(198,160,96,.16)');
+  rule.addColorStop(1, 'rgba(198,160,96,0)');
+  ctx.fillStyle = rule;
+  ctx.fillRect(pad, pad + ph + 0.5, W - pad * 2, 2);
+  ctx.restore();
+
+  // 사진
+  ctx.save();
+  ctx.shadowColor = 'rgba(44,30,14,.30)';
+  ctx.shadowBlur = 26;
+  ctx.shadowOffsetY = 10;
+  ctx.fillStyle = '#12100d';
+  rr(ctx, pad, pad, pw, ph, 6);
+  ctx.fill();
+  ctx.restore();
+  ctx.save();
+  rr(ctx, pad, pad, pw, ph, 6);
+  ctx.clip();
+  ctx.drawImage(source, 0, 0, source.width, source.height, pad, pad, pw, ph);
+  ctx.restore();
+  ctx.save();
+  rr(ctx, pad, pad, pw, ph, 6);
+  ctx.strokeStyle = 'rgba(20,16,10,.30)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.restore();
+
+  // 캡션
+  const d = new Date();
+  const days = ['일', '월', '화', '수', '목', '금', '토'];
+  const p2 = (n) => String(n).padStart(2, '0');
+  const dateText = d.getFullYear() + '.' + p2(d.getMonth() + 1) + '.' + p2(d.getDate());
+  const dayText = '(' + days[d.getDay()] + ')';
+  const textX = pad + 6;
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#2a2118';
+  ctx.font = '900 46px ' + KR_FONT;
+  ctx.fillText('임재범 찍덕 전시관', textX, pad + ph + 74);
+
+  ctx.fillStyle = 'rgba(122,102,74,.92)';
+  ctx.font = '800 21px ' + KR_FONT;
+  drawSpaced(ctx, 'Ru1eTheWorld · PHOTO ZONE', textX, pad + ph + 116, 2.4);
+
+  ctx.fillStyle = 'rgba(150,126,92,.95)';
+  ctx.font = '700 20px ' + KR_FONT;
+  ctx.fillText(dateText + ' ' + dayText, textX, pad + ph + 152);
+
+  // YBJ 골드 인장
+  const sr = 56;
+  const sx = W - pad - sr - 8;
+  const sy = pad + ph + 92;
+  ctx.save();
+  ctx.translate(sx, sy);
+  ctx.rotate(-0.16);
+  ctx.beginPath(); ctx.arc(0, 0, sr, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(190,148,84,.85)'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 0, sr - 8, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(190,148,84,.42)'; ctx.lineWidth = 1.4; ctx.stroke();
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(168,126,62,.95)';
+  ctx.font = '900 30px ' + KR_FONT;
+  ctx.fillText('YBJ', 0, 4);
+  ctx.fillStyle = 'rgba(168,126,62,.70)';
+  ctx.font = '800 10px ' + KR_FONT;
+  drawSpaced(ctx, 'PHOTO ZONE', 0, 26, 1.6);
+  ctx.restore();
+  ctx.textAlign = 'left';
+
+  return c.toDataURL('image/png');
+}
+function takePhoto() {
+  // 최신 프레임을 한 번 더 그린 뒤 캡처 (preserveDrawingBuffer 로 빈 화면 방지)
+  renderer.render(scene, camera);
+  photoUrl = drawPhotoFrame(canvasEl);
+  pzImg.src = photoUrl;
+  return photoUrl;
+}
+function openPhoto() {
+  stopTour(false);
+  hideHint();
+  takePhoto();
+  photoEl.classList.remove('hidden');
+  photoEl.removeAttribute('aria-hidden');
+  paused = true;
+  velocity.set(0, 0, 0);
+  resetStick();
+  toast('📸 포토존 인증샷을 찍었어요');
+}
+function closePhoto() {
+  if (photoEl.classList.contains('hidden')) return;
+  photoEl.classList.add('hidden');
+  photoEl.setAttribute('aria-hidden', 'true');
+  paused = false;
+  playFrameVideo();
+}
+$('btnShot').addEventListener('click', openPhoto);
+$('pzClose').addEventListener('click', closePhoto);
+photoEl.addEventListener('click', (e) => { if (e.target === photoEl) closePhoto(); });
+/* ------------------------------------------------------- 🔮 오늘의 가사 뽑기
+   임재범 대표곡의 실제 가사 한 소절을 블랙&골드 운세 카드로 그려 준다.
+   가사 문구만 담고 개인정보는 넣지 않는다. */
+const LYRICS = [
+  { song: '너를 위해', album: '4집', lines: ['날 세상에서 제대로 살게 해 준', '유일한 사람이 너란 걸 알아'] },
+  { song: '비상', album: '2집', lines: ['그토록 오랫동안 움츠렸던 날개', '하늘로 더 넓게 펼쳐보이며'] },
+  { song: '고해', album: '3집', lines: ['잊은 척 살아간다는 건', '살아도 죽은 겁니다'] },
+  { song: '낙인', album: '추노 OST', lines: ['하루가 일 년처럼 길구나', '그 언제나 아침이 올까'] },
+  { song: '사랑보다 깊은 상처', album: '1집', lines: ['사랑보다 깊은 상처만 준 날', '이젠 깨달았어 후회하고 있다는 걸'] },
+  { song: '이 밤이 지나면', album: '1집', lines: ['이 밤이 지나면 우린', '또 다시 헤어져야 하는데'] },
+  { song: '그대는 어디에', album: 'Memories', lines: ['돌아올 그대 모습 그려 보는 것만으로', '너무나도 행복해진 나는'] },
+  { song: '살아야지', album: 'Memories', lines: ['살아야지 삶이 다 그렇지', '춥고 아프고 위태로운 거지'] },
+  { song: '여행자', album: 'Seven,', lines: ['매일 낯선 길, 다신 못 걸을 좌절이 와도', '존재 의미를 나는 찾고 싶어'] },
+  { song: 'Life is a Drama', album: 'Prelude3', lines: ['끝을 말하지 마', '넌 이미 이보다 큰 걸 이겨냈던 적이 있어', '무너지는 벽의 뒤에 새 길을 봐'] },
+  { song: '위로', album: 'Seven,', lines: ['그댄 충분히 잘하고 있어요', '괜찮아요 쉬어가도 끝난 게 아니니까'] },
+  { song: '인사', album: 'Prelude1', lines: ['높고 험한 길 위에선 매일이지만', '고개 돌리면 그대 있는 믿음 있으니', '온전히 나를 서게 한 그댈 향한 내 인사'] }
+];
+const lyricEl = $('lyric');
+const lyImg = $('lyImg');
+let lyricUrl = '';
+let lyricPick = 0;
+
+function spacedCenter(ctx, text, cx, y, gap) {
+  ctx.save();
+  ctx.textAlign = 'left';
+  let w = -gap;
+  for (const ch of String(text)) w += ctx.measureText(ch).width + gap;
+  drawSpaced(ctx, text, cx - w / 2, y, gap);
+  ctx.restore();
+}
+function drawLyricCard(item) {
+  const W = 1080, H = 1350;
+  const c = makeCanvas(W, H);
+  const ctx = c.getContext('2d');
+  const GOLD = 'rgba(216,178,113,';
+  const d = new Date();
+  const p2 = (n) => String(n).padStart(2, '0');
+  const dateText = d.getFullYear() + '.' + p2(d.getMonth() + 1) + '.' + p2(d.getDate());
+
+  // 밤하늘 같은 검정 + 금빛 안개
+  const bg = ctx.createRadialGradient(W * 0.5, H * 0.38, 40, W * 0.5, H * 0.5, W * 0.98);
+  bg.addColorStop(0, '#211a10');
+  bg.addColorStop(0.5, '#0e0c08');
+  bg.addColorStop(1, '#040404');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+  grain(ctx, W, H, 2600, 0.055);
+  ctx.save();
+  for (let i = 0; i < 110; i++) {
+    const r = 0.8 + Math.random() * 2.2;
+    soft(ctx, Math.random() * W, Math.random() * H, r, '#f7d9a2', 0.06 + Math.random() * 0.22);
+  }
+  ctx.restore();
+
+  // 이중 금테 + 모서리 장식
+  ctx.strokeStyle = GOLD + '0.86)';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(44, 44, W - 88, H - 88);
+  ctx.strokeStyle = GOLD + '0.28)';
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(58, 58, W - 116, H - 116);
+  [[44, 44, 1, 1], [W - 44, 44, -1, 1], [44, H - 44, 1, -1], [W - 44, H - 44, -1, -1]].forEach(([x, y, sx, sy]) => {
+    ctx.beginPath();
+    ctx.moveTo(x + sx * 52, y);
+    ctx.lineTo(x + sx * 52, y + sy * 10);
+    ctx.lineTo(x + sx * 10, y + sy * 10);
+    ctx.lineTo(x + sx * 10, y + sy * 52);
+    ctx.lineTo(x, y + sy * 52);
+    ctx.strokeStyle = GOLD + '0.95)';
+    ctx.lineWidth = 3.4;
+    ctx.stroke();
+  });
+
+  // 헤더
+  ctx.textAlign = 'center';
+  ctx.fillStyle = GOLD + '0.95)';
+  ctx.font = '800 21px ' + KR_FONT;
+  spacedCenter(ctx, 'TODAY’S LYRIC', W / 2, 168, 7);
+  ctx.fillStyle = 'rgba(248,238,218,.55)';
+  ctx.font = '700 17px ' + KR_FONT;
+  spacedCenter(ctx, '임재범 찍덕 전시관', W / 2, 208, 3.4);
+  ctx.beginPath();
+  ctx.moveTo(W / 2 - 62, 236);
+  ctx.lineTo(W / 2 + 62, 236);
+  ctx.strokeStyle = GOLD + '0.55)';
+  ctx.lineWidth = 1.6;
+  ctx.stroke();
+
+  // 여는 따옴표
+  ctx.fillStyle = GOLD + '0.30)';
+  ctx.font = '700 190px Georgia, "Times New Roman", serif';
+  ctx.fillText('“', W / 2, 430);
+
+  // 가사 — 카드 폭에 맞춰 단어 단위로 접고, 가장 큰 글자 크기를 고른다
+  const maxW = W - 250;
+  function wrapAt(size) {
+    ctx.font = '900 ' + size + 'px ' + KR_FONT;
+    const out = [];
+    for (const raw of item.lines) {
+      if (ctx.measureText(raw).width <= maxW) { out.push(raw); continue; }
+      let cur = '';
+      for (const word of raw.split(' ')) {
+        const t = cur ? cur + ' ' + word : word;
+        if (cur && ctx.measureText(t).width > maxW) { out.push(cur); cur = word; }
+        else cur = t;
+      }
+      if (cur) out.push(cur);
+    }
+    return out;
+  }
+  let fs = 52;
+  let wrapped = wrapAt(fs);
+  while (fs > 32) {
+    wrapped = wrapAt(fs);
+    if (wrapped.length <= 6 && (wrapped.length - 1) * fs * 1.55 <= 340) break;
+    fs -= 2;
+  }
+  const lh = Math.round(fs * 1.55);
+  const n = wrapped.length;
+  const y0 = Math.round(664 - ((n - 1) * lh) / 2);
+  wrapped.forEach((line, i) => {
+    ctx.save();
+    ctx.shadowColor = 'rgba(255,214,158,.28)';
+    ctx.shadowBlur = 26;
+    ctx.fillStyle = '#f8efdd';
+    ctx.font = '900 ' + fs + 'px ' + KR_FONT;
+    ctx.fillText(line, W / 2, y0 + i * lh);
+    ctx.restore();
+  });
+
+  // 구분선 + 다이아몬드
+  const dy = Math.min(1010, y0 + (n - 1) * lh + 112);
+  ctx.beginPath();
+  ctx.moveTo(W / 2 - 210, dy);
+  ctx.lineTo(W / 2 - 34, dy);
+  ctx.moveTo(W / 2 + 34, dy);
+  ctx.lineTo(W / 2 + 210, dy);
+  ctx.strokeStyle = GOLD + '0.42)';
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+  ctx.save();
+  ctx.translate(W / 2, dy);
+  ctx.rotate(Math.PI / 4);
+  ctx.fillStyle = GOLD + '0.85)';
+  ctx.fillRect(-8, -8, 16, 16);
+  ctx.restore();
+
+  // 곡명 · 아티스트
+  ctx.fillStyle = GOLD + '0.98)';
+  ctx.font = '800 40px ' + KR_FONT;
+  ctx.fillText('— ' + item.song, W / 2, dy + 78);
+  ctx.fillStyle = 'rgba(248,238,218,.62)';
+  ctx.font = '700 18px ' + KR_FONT;
+  spacedCenter(ctx, 'YIM JAE BEUM' + (item.album ? ' · ' + item.album.toUpperCase() : ''), W / 2, dy + 118, 4.2);
+
+  // 푸터
+  ctx.fillStyle = 'rgba(248,238,218,.72)';
+  ctx.font = '800 22px ' + KR_FONT;
+  spacedCenter(ctx, 'Ru1eTheWorld', W / 2, 1216, 3.2);
+  ctx.fillStyle = 'rgba(248,238,218,.42)';
+  ctx.font = '700 17px ' + KR_FONT;
+  spacedCenter(ctx, dateText + ' · PHOTO GALLERY', W / 2, 1252, 2.2);
+
+  // YBJ 인장
+  ctx.save();
+  ctx.translate(W - 138, 1218);
+  ctx.rotate(-0.12);
+  ctx.beginPath(); ctx.arc(0, 0, 52, 0, Math.PI * 2);
+  ctx.strokeStyle = GOLD + '0.78)'; ctx.lineWidth = 2.6; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 0, 43, 0, Math.PI * 2);
+  ctx.strokeStyle = GOLD + '0.32)'; ctx.lineWidth = 1.2; ctx.stroke();
+  ctx.fillStyle = GOLD + '0.90)';
+  ctx.font = '900 27px ' + KR_FONT;
+  ctx.fillText('YBJ', 0, 4);
+  ctx.fillStyle = GOLD + '0.62)';
+  ctx.font = '800 9px ' + KR_FONT;
+  spacedCenter(ctx, 'LYRIC', 0, 25, 1.4);
+  ctx.restore();
+  ctx.textAlign = 'left';
+
+  return c.toDataURL('image/png');
+}
+function drawLyricPick(forceDifferent) {
+  let i = Math.floor(Math.random() * LYRICS.length);
+  if (forceDifferent && LYRICS.length > 1) {
+    while (i === lyricPick) i = Math.floor(Math.random() * LYRICS.length);
+  }
+  lyricPick = i;
+  lyricUrl = drawLyricCard(LYRICS[i]);
+  lyImg.src = lyricUrl;
+  lyImg.alt = LYRICS[i].song + ' 가사 카드';
+}
+function openLyric() {
+  stopTour(false);
+  hideHint();
+  drawLyricPick(false);
+  lyricEl.classList.remove('hidden');
+  lyricEl.removeAttribute('aria-hidden');
+  paused = true;
+  velocity.set(0, 0, 0);
+  resetStick();
+}
+function closeLyric() {
+  if (lyricEl.classList.contains('hidden')) return;
+  lyricEl.classList.add('hidden');
+  lyricEl.setAttribute('aria-hidden', 'true');
+  paused = false;
+  playFrameVideo();
+}
+$('btnLyric').addEventListener('click', openLyric);
+$('lyClose').addEventListener('click', closeLyric);
+lyricEl.addEventListener('click', (e) => { if (e.target === lyricEl) closeLyric(); });
+$('lyAgain').addEventListener('click', () => {
+  drawLyricPick(true);
+  toast('🔮 다른 소절을 뽑았어요');
+});
+$('lySave').addEventListener('click', () => {
+  if (!lyricUrl) drawLyricPick(false);
+  const d = new Date();
+  const p2 = (n) => String(n).padStart(2, '0');
+  const stamp = '' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate());
+  const a = document.createElement('a');
+  a.href = lyricUrl;
+  a.download = 'Ru1eTheWorld-lyric-' + stamp + '.png';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  toast('가사 카드를 저장했어요 · 안 되면 길게 눌러 저장');
+});
+
+/* ------------------------------------------------------ ✈️ 응원 종이비행기
+   적어 둔 응원 한 줄을 달고 크림·골드 종이비행기가 전시장 천장으로 날아오른다.
+   날아간 비행기를 탭하면 그 문구를 다시 보여 준다. */
+const PLANE_DEFAULT = '오늘도 변함없이 응원해요 🤎';
+const airplanes = [];
+const AIRPLANE_MAX = 14;
+const AIRPLANE_GEO = (function () {
+  const g = new THREE.BufferGeometry();
+  const v = new Float32Array([
+    0.00, 0.00, 0.34, -0.26, 0.02, -0.24, 0.00, 0.11, -0.06,
+    0.00, 0.00, 0.34, 0.00, 0.11, -0.06, 0.26, 0.02, -0.24,
+    0.00, 0.00, 0.34, -0.26, 0.02, -0.24, 0.00, -0.03, -0.20,
+    0.00, 0.00, 0.34, 0.00, -0.03, -0.20, 0.26, 0.02, -0.24
+  ]);
+  g.setAttribute('position', new THREE.BufferAttribute(v, 3));
+  g.computeVertexNormals();
+  return g;
+})();
+const planeEl = $('plane');
+const plMsgEl = $('plMsg');
+
+function launchAirplane(message) {
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0xfffaf0, emissive: 0xffd9a8, emissiveIntensity: 0.55,
+    roughness: 0.62, metalness: 0.06, side: THREE.DoubleSide,
+    transparent: true, opacity: 1, flatShading: true
+  });
+  const mesh = new THREE.Mesh(AIRPLANE_GEO, mat);
+  mesh.scale.setScalar(0.34);
+  const group = new THREE.Group();
+  group.add(mesh);
+  const haloMat = new THREE.SpriteMaterial({
+    map: glowTex, color: 0xffdca8, transparent: true, opacity: 0.42,
+    blending: THREE.AdditiveBlending, depthWrite: false, fog: false
+  });
+  const halo = new THREE.Sprite(haloMat);
+  halo.scale.setScalar(0.62);
+  group.add(halo);
+
+  const fwdV = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+  const rightV = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+  const side = Math.random() < 0.5 ? -1 : 1;
+  const p0 = new THREE.Vector3(
+    player.x + fwdV.x * 1.25 + rightV.x * 0.24,
+    EYE - 0.3,
+    player.z + fwdV.z * 1.25 + rightV.z * 0.24
+  );
+  const limX = ROOM.w / 2 - 0.5, limZ = ROOM.d / 2 - 0.5;
+  const clampV = (v) => new THREE.Vector3(
+    clamp(v.x, -limX, limX), clamp(v.y, 0.45, ROOM.h - 0.3), clamp(v.z, -limZ, limZ)
+  );
+  const p1 = clampV(new THREE.Vector3(
+    p0.x + fwdV.x * 1.5 + rightV.x * 0.95 * side, p0.y + 0.5, p0.z + fwdV.z * 1.5 + rightV.z * 0.95 * side
+  ));
+  const p2 = clampV(new THREE.Vector3(
+    p0.x + fwdV.x * 2.7 - rightV.x * 1.25 * side, p0.y + 1.55, p0.z + fwdV.z * 2.7 - rightV.z * 1.25 * side
+  ));
+  const p3 = clampV(new THREE.Vector3(
+    p0.x + fwdV.x * 3.5 + rightV.x * 0.5 * side, ROOM.h - 0.35, p0.z + fwdV.z * 3.5 + rightV.z * 0.5 * side
+  ));
+  const curve = new THREE.CatmullRomCurve3([p0, p1, p2, p3]);
+  group.position.copy(p0);
+  group.userData.airplane = { message, t: 0, dur: 8.2 + Math.random() * 1.6, curve, mat, haloMat, side };
+  group.renderOrder = 5;
+  scene.add(group);
+  airplanes.push(group);
+  while (airplanes.length > AIRPLANE_MAX) {
+    const old = airplanes.shift();
+    scene.remove(old);
+    old.userData.airplane.mat.dispose();
+    old.userData.airplane.haloMat.dispose();
+  }
+  return group;
+}
+const _planeP = new THREE.Vector3();
+const _planeT = new THREE.Vector3();
+function stepAirplanes(dt) {
+  for (let i = airplanes.length - 1; i >= 0; i--) {
+    const g = airplanes[i];
+    const a = g.userData.airplane;
+    a.t += dt / a.dur;
+    if (a.t >= 1) {
+      scene.remove(g);
+      airplanes.splice(i, 1);
+      a.mat.dispose();
+      a.haloMat.dispose();
+      continue;
+    }
+    const t = a.t;
+    a.curve.getPointAt(t, _planeP);
+    a.curve.getTangentAt(t, _planeT).normalize();
+    // 살짝 흔들리며 떠오르는 종이비행기
+    _planeP.x += Math.sin(t * 9.5 + a.side) * 0.05;
+    _planeP.y += Math.sin(t * 7.2) * 0.035;
+    g.position.copy(_planeP);
+    g.rotation.order = 'YXZ';
+    g.rotation.y = Math.atan2(_planeT.x, _planeT.z);
+    g.rotation.x = -Math.asin(clamp(_planeT.y, -1, 1));
+    g.rotation.z = Math.sin(t * 5.4 + a.side) * 0.32;
+    const fade = t < 0.7 ? 1 : Math.max(0, 1 - (t - 0.7) / 0.3);
+    a.mat.opacity = fade;
+    a.mat.emissiveIntensity = 0.45 + 0.4 * (0.5 + 0.5 * Math.sin(t * 12));
+    a.haloMat.opacity = 0.42 * fade;
+    g.visible = fade > 0.02;
+  }
+}
+function pickAirplane(clientX, clientY) {
+  if (!airplanes.length) return null;
+  setRay(clientX, clientY, 24);
+  const hits = raycaster.intersectObjects(airplanes, true);
+  for (const h of hits) {
+    let n = h.object;
+    while (n && !n.userData.airplane) n = n.parent;
+    if (n) return n.userData.airplane;
+  }
+  return null;
+}
+function openPlane() {
+  stopTour(false);
+  hideHint();
+  planeEl.classList.remove('hidden');
+  planeEl.removeAttribute('aria-hidden');
+  paused = true;
+  velocity.set(0, 0, 0);
+  resetStick();
+  setTimeout(() => { try { plMsgEl.focus({ preventScroll: true }); } catch (err) {} }, 260);
+}
+function closePlane() {
+  if (planeEl.classList.contains('hidden')) return;
+  planeEl.classList.add('hidden');
+  planeEl.setAttribute('aria-hidden', 'true');
+  paused = false;
+  playFrameVideo();
+}
+function sendPlane() {
+  const raw = (plMsgEl.value || '').trim().replace(/\s+/g, ' ');
+  const message = raw || PLANE_DEFAULT;
+  closePlane();
+  launchAirplane(message);
+  const short = message.length > 22 ? message.slice(0, 22) + '…' : message;
+  toast("✈️ '" + short + "' 종이비행기가 날아갔어요!");
+  plMsgEl.value = '';
+}
+$('btnPlane').addEventListener('click', openPlane);
+$('plClose').addEventListener('click', closePlane);
+planeEl.addEventListener('click', (e) => { if (e.target === planeEl) closePlane(); });
+$('plSend').addEventListener('click', sendPlane);
+plMsgEl.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  sendPlane();
+});
+
+$('pzSave').addEventListener('click', () => {
+  if (!photoUrl) takePhoto();
+  const d = new Date();
+  const p2 = (n) => String(n).padStart(2, '0');
+  const stamp = '' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + '-' + p2(d.getHours()) + p2(d.getMinutes());
+  const a = document.createElement('a');
+  a.href = photoUrl;
+  a.download = 'Ru1eTheWorld-photozone-' + stamp + '.png';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  toast('인증샷을 저장했어요 · 안 되면 길게 눌러 저장');
+});
+
 /* --------------------------------------------------------------- camera */
 camera.position.copy(player);
 
@@ -2797,6 +3763,7 @@ window.addEventListener('keydown', (e) => {
   }
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   if (['w', 'a', 's', 'd', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Shift', ' '].includes(k)) {
+    if (tourActive) stopTour(false);     // 키보드로 직접 걷기 시작하면 투어 종료
     keys.add(k);
     if (k.startsWith('Arrow') || k === ' ') e.preventDefault();
   }
@@ -2832,6 +3799,7 @@ function resetStick() {
   stickKnob.style.transform = 'translate(0px, 0px)';
 }
 stickBase.addEventListener('pointerdown', (e) => {
+  if (tourActive) stopTour(false);
   e.preventDefault();
   stick.pointerId = e.pointerId;
   stickBase.setPointerCapture(e.pointerId);
@@ -2855,6 +3823,7 @@ let dragMoved = 0;
 let lastTapTime = 0;
 
 canvasEl.addEventListener('pointerdown', (e) => {
+  if (tourActive) stopTour(false);       // 화면을 만지면 자동 투어는 즉시 끝난다
   if (paused) return;
   canvasEl.setPointerCapture(e.pointerId);
   lookPointers.set(e.pointerId, { x: e.clientX, y: e.clientY, t: performance.now(), moved: 0 });
@@ -2935,6 +3904,8 @@ function pick(clientX, clientY) {
   return hit ? hit.frame : null;
 }
 function tapSelect(clientX, clientY) {
+  const ah = pickAirplane(clientX, clientY);   // ✈️ 날아가는 비행기를 탭하면 적은 응원이 다시 보인다
+  if (ah) { showEggToast('✈️ ' + ah.message); return; }
   const fh = pickFrameHit(clientX, clientY);
   const eh = pickEgg(clientX, clientY);
   if (eh && (!fh || eh.distance < fh.distance)) { triggerEgg(eh.kind, eh.point); return; }
@@ -3466,6 +4437,10 @@ $('btnResetAll').addEventListener('click', () => {
 
 /* 인트로 / 리셋 / 닫기 */
 function closeAll() {
+  stopTour(false);
+  closePhoto();
+  closeLyric();
+  closePlane();
   closeModal();
   closeUpload();
   if (window.__gb && window.__gb.isOpen && window.__gb.isOpen()) window.__gb.close();
@@ -3480,6 +4455,7 @@ $('btnEnter').addEventListener('click', () => {
   playFrameVideo();
 });
 $('btnReset').addEventListener('click', () => {
+  stopTour(false);
   player.set(0.7, EYE, 3.4);
   yaw = 0.16; pitch = -0.04;
   velocity.set(0, 0, 0);
@@ -3860,8 +4836,17 @@ function tick() {
   // 축하 꽃가루 (이스터에그 burst)
   stepConfetti(dt);
 
+  // 🎆 어두운 무드의 콘서트 밤하늘 + 응원봉 빛가루
+  updateStarlight(dt);
+
+  // ✈️ 날아가는 응원 종이비행기
+  stepAirplanes(dt);
+
+  // 🎬 자동 투어 — 이동·시선을 투어가 직접 몬다
+  if (tourActive) updateTour(dt);
+
   // 이동
-  if (!paused) {
+  if (!paused && !tourActive) {
     let ix = 0, iz = 0;
     if (keys.has('w') || keys.has('ArrowUp')) iz += 1;
     if (keys.has('s') || keys.has('ArrowDown')) iz -= 1;
@@ -3986,6 +4971,22 @@ window.__gallery = {
   setPose: (x, z, y, p) => { player.x = x; player.z = z; yaw = y; pitch = p; },
   eggs: { trigger: (kind) => triggerEgg(kind), pick: (x, y) => pickEgg(x, y) },
   ticket: { open: openTicket, close: closeTicket, render: renderTicket, image: () => ticketImageUrl },
+  tour: {
+    start: startTour, stop: () => stopTour(false), isActive: () => tourActive,
+    state: () => ({ active: tourActive, step: tourStep, phase: tourPhase, stops: tourStops.length,
+                    pos: [player.x, player.z], yaw, pitch })
+  },
+  photo: { take: takePhoto, open: openPhoto, close: closePhoto, image: () => photoUrl },
+  lyric: {
+    open: openLyric, close: closeLyric, image: () => lyricUrl, draw: (d) => drawLyricPick(!!d),
+    song: () => LYRICS[lyricPick].song, count: () => LYRICS.length
+  },
+  plane: {
+    open: openPlane, close: closePlane, send: sendPlane, fly: (m) => launchAirplane(m || PLANE_DEFAULT),
+    count: () => airplanes.length, messages: () => airplanes.map((a) => a.userData.airplane.message)
+  },
+  starlight: () => ({ fade: starlightFade, layers: STAR_LAYERS.length, bokeh: BOKEH_COUNT,
+                      sky: nightSkyMat.opacity }),
   state: () => ({ paused, yaw, pitch, pos: [player.x, player.z], fov: camera.fov })
 };
 </script>
