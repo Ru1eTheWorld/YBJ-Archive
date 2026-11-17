@@ -1579,7 +1579,7 @@ function makeSignTexture() {
   ctx.textBaseline = 'middle';
   ctx.fillStyle = 'rgba(150,118,70,.92)';
   ctx.font = `700 15px ${KR_FONT}`;
-  const label = 'PHOTO EXHIBITION';
+  const label = 'EXHIBITION';
   const gap = 5;
   let lw = -gap;
   for (const ch of label) lw += ctx.measureText(ch).width + gap;
@@ -1597,15 +1597,9 @@ function makeSignTexture() {
   ctx.lineTo(W / 2 + 70, 232);
   ctx.stroke();
 
-  ctx.fillStyle = '#3b2f22';
-  ctx.font = `800 34px ${KR_FONT}`;
-  ctx.fillText('임재범 40주년 사진전', W / 2, 292);
-  ctx.fillStyle = 'rgba(90,74,52,.78)';
-  ctx.font = `600 21px ${KR_FONT}`;
-  ctx.fillText('열 점의 사진, 세 편의 영상', W / 2, 340);
   ctx.fillStyle = 'rgba(90,74,52,.62)';
   ctx.font = `500 19px ${KR_FONT}`;
-  ctx.fillText('천천히 둘러보세요 ✨', W / 2, 462);
+  ctx.fillText('천천히 둘러보세요 ✨', W / 2, 384);
 
   ctx.textAlign = 'left';
   ctx.fillStyle = 'rgba(150,118,70,.78)';
