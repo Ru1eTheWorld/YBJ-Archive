@@ -1685,7 +1685,7 @@ function makeLightConeGeometry(radius, height) {
   const colors = new Float32Array(pos.count * 3);
   for (let i = 0; i < pos.count; i++) {
     const t = clamp((pos.getY(i) + height / 2) / height, 0, 1);
-    const a = Math.pow(t, 1.55) * 0.5;
+    const a = Math.pow(t, 1.55) * 0.38;
     colors[i * 3] = a;
     colors[i * 3 + 1] = a * 0.9;
     colors[i * 3 + 2] = a * 0.7;
@@ -1925,7 +1925,7 @@ addRail(0.05, ROOM.d - 0.4, ROOM.w / 2 - RAIL_INSET, 0);
 
 // 빛 원뿔 · 바닥 반사광 — 액자마다 하나씩, 무거운 실시간 그림자 대신 가산 합성
 const coneMat = new THREE.MeshBasicMaterial({
-  vertexColors: true, transparent: true, opacity: 0.3,
+  vertexColors: true, transparent: true, opacity: 0.16,
   blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false
 });
 const reflectMat = new THREE.MeshBasicMaterial({
@@ -3194,7 +3194,7 @@ function tick() {
   }
 
   // 스포트라이트 원뿔 · 바닥 반사 · 빛가루 — 테마 밝기에 맞춰 세기를 맞춘다
-  coneMat.opacity = 0.14 + themeState.glow * 0.85;
+  coneMat.opacity = 0.08 + themeState.glow * 0.6;
   reflectMat.opacity = 0.09 + themeState.glow * 0.4;
   dustMat.opacity = 0.30 + themeState.glow * 0.8;
   bannerMat.emissiveIntensity = 0.10 + themeState.emissive * 0.6;
