@@ -2851,7 +2851,7 @@ window.__gallery = {
 </script>
 <script>
 /* ------------------------------------------------------------------ BGM
-   전시장 배경음악 — Web Audio API로 그 자리에서 합성하는 잔잔한 피아노.
+   전시장 배경음악 — Web Audio API로 그 자리에서 합성하는 밝고 산뜻한 피아노.
    · 외부 음원 파일·CDN을 쓰지 않아 저작권 걱정이 없다.
    · 모바일 브라우저(iOS Safari 포함)는 사용자 제스처가 있어야 소리가 나므로
      BGM 버튼 탭 시점에 AudioContext를 만들고 resume() 한다.
@@ -2876,17 +2876,31 @@ window.__gallery = {
   }
 
   /* ------------------------------------------------------------ 음악 설계 */
-  var BPM = 68;
-  var BEAT = 60 / BPM;              /* 약 0.882초 — 아주 느린 발라드 템포 */
+  var BPM = 96;
+  var BEAT = 60 / BPM;              /* 0.625초 — 가볍게 걷는 산책 템포 */
   var BAR = BEAT * 4;               /* 한 코드 = 4박 */
-  var CYCLE = BAR * 4;              /* 4개 코드 = 16박 (약 14.1초) */
+  var CYCLE = BAR * 8;              /* 8개 코드 = 32박 (20초) */
 
-  /* Fmaj7 → G6 → Em7 → Am7 : 따뜻하고 서정적인 진행 */
+  /* Cadd9 → G/B → Fmaj7/A → G6 : 맑고 기분 좋은 장조 진행(네 마디를 두 번).
+     두 번째 네 마디는 멜로디를 한결 높여 들뜬 기분을 더한다.
+     mel = [8분음표 위치, 음높이, 길이(박), 세기] */
   var PROG = [
-    { bass: 41, chord: [53, 57, 60, 64], mel: [77, 76, 72], arp: [0, 2, 1, 3, 2, 4, 3, 2] }, /* Fmaj7 */
-    { bass: 43, chord: [55, 59, 62, 64], mel: [79, 74, 71], arp: [0, 1, 2, 4, 3, 2, 1, 2] }, /* G6 */
-    { bass: 40, chord: [52, 55, 59, 62], mel: [76, 74, 71], arp: [0, 2, 1, 3, 2, 4, 3, 2] }, /* Em7 */
-    { bass: 45, chord: [57, 60, 64, 67], mel: [72, 69, 76], arp: [0, 1, 2, 3, 4, 3, 2, 1] }  /* Am7 */
+    { bass: 48, chord: [60, 64, 67, 74], arp: [0, 2, 1, 3, 2, 4, 3, 2],   /* Cadd9 */
+      mel: [[0, 67, 1, 0.62], [1, 72, 1, 0.55], [2, 74, 1, 0.52], [3, 76, 1.6, 0.66], [5, 74, 0.6, 0.45], [6, 72, 1, 0.5]] },
+    { bass: 47, chord: [59, 62, 67, 71], arp: [0, 1, 2, 3, 4, 3, 2, 1],   /* G/B */
+      mel: [[0, 71, 1, 0.6], [1, 74, 1, 0.52], [2, 76, 1, 0.54], [3, 74, 1.6, 0.6], [5, 71, 0.6, 0.44], [6, 67, 0.6, 0.42], [7, 71, 0.5, 0.4]] },
+    { bass: 45, chord: [53, 57, 60, 64], arp: [0, 2, 1, 3, 4, 3, 2, 1],   /* Fmaj7/A */
+      mel: [[0, 72, 1, 0.6], [1, 76, 1, 0.56], [2, 74, 1, 0.5], [3, 72, 1.6, 0.58], [5, 69, 0.6, 0.44], [6, 72, 0.8, 0.48]] },
+    { bass: 43, chord: [55, 59, 62, 64], arp: [0, 2, 1, 3, 2, 4, 3, 2],   /* G6 */
+      mel: [[0, 74, 1, 0.62], [1, 71, 1, 0.5], [2, 74, 0.8, 0.48], [3, 76, 1.8, 0.62], [5, 74, 0.6, 0.44], [6, 71, 0.7, 0.4]] },
+    { bass: 48, chord: [60, 64, 67, 74], arp: [0, 2, 1, 3, 2, 4, 3, 2],   /* Cadd9 */
+      mel: [[0, 76, 1, 0.64], [1, 74, 1, 0.54], [2, 72, 1, 0.5], [4, 72, 1, 0.5], [5, 76, 1, 0.55], [6, 74, 1.6, 0.56]] },
+    { bass: 47, chord: [59, 62, 67, 71], arp: [0, 1, 2, 3, 4, 3, 2, 1],   /* G/B */
+      mel: [[0, 74, 0.8, 0.55], [1, 71, 0.8, 0.46], [2, 67, 1, 0.5], [3, 71, 1, 0.5], [4, 74, 1, 0.52], [5, 76, 1, 0.55], [6, 74, 0.8, 0.48], [7, 71, 0.7, 0.42]] },
+    { bass: 45, chord: [53, 57, 60, 64], arp: [0, 2, 1, 3, 4, 3, 2, 1],   /* Fmaj7/A */
+      mel: [[0, 69, 1, 0.55], [1, 72, 1, 0.52], [2, 76, 1, 0.58], [3, 72, 1.4, 0.52], [5, 69, 0.7, 0.44], [6, 72, 0.9, 0.48]] },
+    { bass: 43, chord: [55, 59, 62, 64], arp: [0, 2, 1, 3, 2, 4, 3, 2],   /* G6 */
+      mel: [[0, 71, 1, 0.55], [1, 74, 1, 0.52], [2, 76, 1, 0.56], [3, 74, 1.8, 0.6], [5, 71, 0.6, 0.42], [6, 67, 0.6, 0.38], [7, 62, 0.5, 0.34]] }
   ];
 
   function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
@@ -2894,7 +2908,7 @@ window.__gallery = {
   /* ------------------------------------------------------------- 엔진 상태 */
   var ctx = null;
   var master = null;
-  var levelValue = 0.60;            /* 전체 볼륨(아주 은은하게) */
+  var levelValue = 0.72;            /* 전체 볼륨(짧아진 잔향만큼 조금 올려 휴대폰 스피커에서도 또렷하게) */
   var on = false;                   /* 사용자가 켜 둔 상태 */
   var ducked = false;               /* 영상 모달 등으로 잠시 멎은 상태 */
   var pumpTimer = 0;
@@ -2913,37 +2927,37 @@ window.__gallery = {
     master.gain.value = 0.0001;
 
     var comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -16;
+    comp.threshold.value = -14;
     comp.knee.value = 14;
-    comp.ratio.value = 3;
-    comp.attack.value = 0.008;
-    comp.release.value = 0.3;
+    comp.ratio.value = 2.6;
+    comp.attack.value = 0.006;
+    comp.release.value = 0.25;
 
-    /* 은은한 공간감 1: 생성한 임펄스로 만드는 잔향 */
+    /* 맑은 공간감 1: 짧게 끊기는 잔향 — 음 하나하나가 또렷하게 들리도록 */
     var wet = ctx.createGain();
-    wet.gain.value = 0.34;
+    wet.gain.value = 0.17;
     var wetLP = ctx.createBiquadFilter();
     wetLP.type = 'lowpass';
-    wetLP.frequency.value = 3200;
+    wetLP.frequency.value = 5200;
     var conv = ctx.createConvolver();
-    conv.buffer = makeImpulse(2.9, 3.1);
+    conv.buffer = makeImpulse(1.25, 3.4);
 
     /* 은은한 공간감 2: 아주 옅은 피드백 딜레이(8분음표) */
     var delay = ctx.createDelay(2);
     delay.delayTime.value = BEAT * 0.5;
     var fb = ctx.createGain();
-    fb.gain.value = 0.24;
+    fb.gain.value = 0.13;
     var fbLP = ctx.createBiquadFilter();
     fbLP.type = 'lowpass';
-    fbLP.frequency.value = 1800;
+    fbLP.frequency.value = 2600;
     var delayWet = ctx.createGain();
-    delayWet.gain.value = 0.12;
+    delayWet.gain.value = 0.075;
 
-    /* 아주 부드러운 전체 로우패스 — 전자음 느낌을 지운다 */
+    /* 전체 톤: 맑고 산뜻하게, 다만 전자음 느낌은 지운다 */
     var tone = ctx.createBiquadFilter();
     tone.type = 'lowpass';
-    tone.frequency.value = 4200;
-    tone.Q.value = 0.4;
+    tone.frequency.value = 7200;
+    tone.Q.value = 0.5;
 
     master.connect(tone);
     tone.connect(comp);
@@ -2985,47 +2999,48 @@ window.__gallery = {
   /* 부드러운 어택 + 긴 릴리즈의 종소리 같은 감쇠. 배음 3개 + 살짝 어긋난 두 대의 현. */
   function piano(when, midi, dur, vel) {
     var f = hz(midi);
-    var peak = 0.115 * vel;
+    var peak = 0.10 * vel;
+    var tail = Math.max(0.34, dur * 0.9);   /* 음이 남는 시간 — 길게 늘어지지 않게 */
 
     var g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, when);
-    g.gain.exponentialRampToValueAtTime(peak, when + 0.012);
-    g.gain.exponentialRampToValueAtTime(Math.max(peak * 0.34, 0.0002), when + 0.42);
-    g.gain.exponentialRampToValueAtTime(Math.max(peak * 0.16, 0.0002), when + dur);
-    g.gain.exponentialRampToValueAtTime(0.0001, when + dur + 1.15);
+    g.gain.exponentialRampToValueAtTime(peak, when + 0.006);
+    g.gain.exponentialRampToValueAtTime(Math.max(peak * 0.30, 0.0002), when + 0.16);
+    g.gain.exponentialRampToValueAtTime(Math.max(peak * 0.12, 0.0002), when + tail);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + tail + 0.55);
 
     var lp = ctx.createBiquadFilter();
     lp.type = 'lowpass';
     lp.Q.value = 0.5;
-    var cut = Math.min(5200, Math.max(1200, f * 5.2));
+    var cut = Math.min(9500, Math.max(2400, f * 7));
     lp.frequency.setValueAtTime(cut, when);
-    lp.frequency.exponentialRampToValueAtTime(Math.max(700, cut * 0.5), when + Math.min(1.6, dur + 0.6));
+    lp.frequency.exponentialRampToValueAtTime(Math.max(1200, cut * 0.45), when + Math.min(0.8, dur + 0.25));
 
-    /* 살짝 어긋난 두 현 → 은은한 두께 */
+    /* 살짝 어긋난 두 현 → 맑은 두께 */
     var o1 = ctx.createOscillator();
     o1.type = 'sine';
     o1.frequency.value = f;
-    o1.detune.value = -4;
+    o1.detune.value = -3;
     var o2 = ctx.createOscillator();
     o2.type = 'triangle';
     o2.frequency.value = f;
-    o2.detune.value = 5;
+    o2.detune.value = 3;
     var g2 = ctx.createGain();
-    g2.gain.value = 0.42;
+    g2.gain.value = 0.30;
 
-    /* 2·3배음 — 피아노의 밝기, 아주 옅게 */
+    /* 2·3배음 — 피아노의 밝기, 짧게 반짝이고 사라진다 */
     var o3 = ctx.createOscillator();
     o3.type = 'sine';
-    o3.frequency.value = f * 2.002;
+    o3.frequency.value = f * 2.001;
     var g3 = ctx.createGain();
-    g3.gain.setValueAtTime(0.16, when);
-    g3.gain.exponentialRampToValueAtTime(0.0001, when + Math.min(1.1, dur));
+    g3.gain.setValueAtTime(0.13, when);
+    g3.gain.exponentialRampToValueAtTime(0.0001, when + Math.min(0.4, dur));
     var o4 = ctx.createOscillator();
     o4.type = 'sine';
-    o4.frequency.value = f * 3.008;
+    o4.frequency.value = f * 3.004;
     var g4 = ctx.createGain();
-    g4.gain.setValueAtTime(0.05, when);
-    g4.gain.exponentialRampToValueAtTime(0.0001, when + Math.min(0.7, dur));
+    g4.gain.setValueAtTime(0.055, when);
+    g4.gain.exponentialRampToValueAtTime(0.0001, when + Math.min(0.3, dur));
 
     o1.connect(lp);
     o2.connect(g2); g2.connect(lp);
@@ -3034,7 +3049,7 @@ window.__gallery = {
     lp.connect(g);
 
     /* 음이 끝난 뒤 노드 정리 */
-    var stopAt = when + dur + 1.3;
+    var stopAt = when + tail + 0.65;
     [o1, o2, o3, o4].forEach(function (o) { o.start(when); o.stop(stopAt); });
     o1.onended = function () {
       try { lp.disconnect(); g.disconnect(); } catch (e) {}
@@ -3042,32 +3057,32 @@ window.__gallery = {
     g.connect(bodyBus);
   }
 
-  /* 아주 낮게 깔리는 따뜻한 패드(현악기 느낌) */
+  /* 아주 옅게 깔리는 공기 같은 패드(숨결) — 낮은 저역은 쓰지 않는다 */
   function pad(when, chord, dur) {
     var g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, when);
-    g.gain.exponentialRampToValueAtTime(0.014, when + 1.1);
-    g.gain.setValueAtTime(0.014, when + dur * 0.7);
-    g.gain.exponentialRampToValueAtTime(0.0001, when + dur + 1.4);
+    g.gain.exponentialRampToValueAtTime(0.0055, when + 0.7);
+    g.gain.setValueAtTime(0.0055, when + dur * 0.7);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + dur + 0.9);
 
     var lp = ctx.createBiquadFilter();
     lp.type = 'lowpass';
-    lp.frequency.value = 1050;
+    lp.frequency.value = 2600;
     lp.Q.value = 0.3;
     lp.connect(g);
 
     var oscs = [];
-    chord.slice(1).forEach(function (m, i) {
+    chord.slice(2).forEach(function (m, i) {
       var o = ctx.createOscillator();
       o.type = 'triangle';
       o.frequency.value = hz(m);
-      o.detune.value = i % 2 ? 6 : -6;
+      o.detune.value = i % 2 ? 5 : -5;
       var og = ctx.createGain();
-      og.gain.value = 0.5;
+      og.gain.value = 0.4;
       o.connect(og); og.connect(lp);
       oscs.push(o);
     });
-    oscs.forEach(function (o) { o.start(when); o.stop(when + dur + 1.6); });
+    oscs.forEach(function (o) { o.start(when); o.stop(when + dur + 1.0); });
     oscs[0].onended = function () { try { lp.disconnect(); g.disconnect(); } catch (e) {} };
     g.connect(bodyBus);
   }
@@ -3075,34 +3090,33 @@ window.__gallery = {
   var bodyBus = null;
 
   /* ------------------------------------------------------- 한 사이클 예약 */
-  /* 코드 하나(4박)마다: 베이스 1음 + 아르페지오 8분음표 + 멜로디 한 줄 */
+  /* 코드 하나(4박)마다: 가벼운 베이스 + 통통 튀는 아르페지오 + 8분음표 멜로디 */
   function scheduleCycle(at) {
     for (var ci = 0; ci < PROG.length; ci++) {
       var ch = PROG[ci];
       var t0 = at + ci * BAR;
       var jitter = function (amt) { return (rnd() - 0.5) * amt; };
 
-      /* 베이스 */
-      piano(t0 + jitter(0.012), ch.bass, 1.2, 0.52);
-      /* 베이스 옥타브 위를 한 번 더, 아주 여리게 */
-      if (ci % 2 === 1) piano(t0 + BEAT * 2 + jitter(0.016), ch.bass + 12, 1.0, 0.28);
+      /* 베이스: 낮게 무겁게 깔지 않고 한 음만 가볍게 */
+      piano(t0 + jitter(0.008), ch.bass, 0.55, 0.42);
 
-      /* 아르페지오: 코드톤 + 한 옥타브 위(5번째 음) */
+      /* 아르페지오: 코드톤 + 한 옥타브 위(두 번째 음)를 8분음표로 */
       var voice = ch.chord.concat([ch.chord[1] + 12]);
       for (var s = 0; s < 8; s++) {
         var idx = ch.arp[s];
-        var accent = (s === 0 || s === 4) ? 0.13 : 0;
-        var vel = 0.45 + accent + jitter(0.12);
-        if (vel < 0.1) vel = 0.1;
-        piano(t0 + s * (BEAT / 2) + jitter(0.014), voice[idx], BEAT * 1.25, vel);
+        var accent = (s === 0) ? 0.08 : (s === 4 ? 0.05 : 0);
+        var vel = 0.34 + accent + jitter(0.06);
+        if (vel < 0.08) vel = 0.08;
+        piano(t0 + s * (BEAT / 2) + jitter(0.008), voice[idx], BEAT * 0.9, vel);
       }
 
-      /* 멜로디: 숨 쉬는 간격으로 두세 음 */
-      piano(t0 + BEAT * 0.5 + jitter(0.02), ch.mel[0], BEAT * 1.6, 0.55);
-      piano(t0 + BEAT * 2 + jitter(0.02), ch.mel[1], BEAT * 1.1, 0.47);
-      if (rnd() > 0.45) piano(t0 + BEAT * 3 + jitter(0.02), ch.mel[2], BEAT * 0.9, 0.32);
+      /* 멜로디: C4~E5의 밝은 8분음표 프레이즈 (상행 → 짧게 쉬고 다시) */
+      for (var m = 0; m < ch.mel.length; m++) {
+        var e = ch.mel[m];
+        piano(t0 + e[0] * (BEAT / 2) + jitter(0.008), e[1], e[2] * BEAT, e[3]);
+      }
 
-      /* 패드 */
+      /* 아주 옅은 패드 */
       pad(t0, ch.chord, BAR);
     }
   }
@@ -3206,7 +3220,7 @@ window.__gallery = {
     } else {
       kick();
     }
-    say('BGM 켜짐 · 잔잔한 피아노가 흐릅니다 🎵');
+    say('BGM 켜짐 · 밝은 피아노가 흐릅니다 🎵');
   }
 
   function turnOff() {
