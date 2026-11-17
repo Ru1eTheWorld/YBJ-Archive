@@ -1484,36 +1484,214 @@ if (videoKickBtn) {
 }
 
 /* --------------------------------------------------- supporting textures */
+function drawSpaced(ctx, text, x, y, gap) {
+  let cx = x;
+  for (const ch of String(text)) {
+    ctx.fillText(ch, cx, y);
+    cx += ctx.measureText(ch).width + gap;
+  }
+}
+
+// 미술관 명판 — 다크 브라스 판 위에 금색 테두리, 번호와 작품 제목을 새긴다
 function makePlaque(num, title) {
   const W = 512, H = 150;
   const c = makeCanvas(W, H);
   const ctx = c.getContext('2d');
-  const g = ctx.createLinearGradient(0, 0, W * 0.4, H);
-  g.addColorStop(0, '#e6d3a6');
-  g.addColorStop(0.45, '#cdb583');
-  g.addColorStop(1, '#b49a68');
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#4b4132');
+  g.addColorStop(0.45, '#37301f');
+  g.addColorStop(1, '#221d15');
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
-  ctx.strokeStyle = 'rgba(70,52,24,.35)';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(6, 6, W - 12, H - 12);
-  ctx.fillStyle = '#3b2e14';
-  ctx.font = `800 34px ${KR_FONT}`;
+  // 브러시드 메탈 결
+  for (let i = 0; i < 220; i++) {
+    ctx.strokeStyle = `rgba(255,238,206,${0.010 + Math.random() * 0.028})`;
+    ctx.lineWidth = 0.6 + Math.random() * 0.9;
+    const y = Math.random() * H;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y + (Math.random() - 0.5) * 1.4);
+    ctx.stroke();
+  }
+  // 금색 이중 테두리
+  ctx.strokeStyle = 'rgba(212,175,110,.68)';
+  ctx.lineWidth = 2.6;
+  ctx.strokeRect(8, 8, W - 16, H - 16);
+  ctx.strokeStyle = 'rgba(212,175,110,.24)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(15, 15, W - 30, H - 30);
+  // 모서리 리벳
+  [[18, 18], [W - 18, 18], [18, H - 18], [W - 18, H - 18]].forEach(([x, y]) => {
+    const rg = ctx.createRadialGradient(x - 1.4, y - 1.4, 0.4, x, y, 5.2);
+    rg.addColorStop(0, 'rgba(255,243,214,.95)');
+    rg.addColorStop(1, 'rgba(140,112,64,.16)');
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(x, y, 4.2, 0, Math.PI * 2);
+    ctx.fill();
+  });
   ctx.textBaseline = 'middle';
-  ctx.fillText(String(num).padStart(2, '0'), 34, 46);
-  ctx.font = `600 15px ${KR_FONT}`;
-  ctx.fillStyle = 'rgba(59,46,20,.55)';
-  ctx.fillText('EXHIBIT', 82, 48);
-  ctx.fillStyle = '#3b2e14';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#e7cd98';
+  ctx.font = `800 40px ${KR_FONT}`;
+  ctx.fillText(String(num).padStart(2, '0'), 38, 50);
+  ctx.fillStyle = 'rgba(231,205,152,.62)';
+  ctx.font = `700 12px ${KR_FONT}`;
+  drawSpaced(ctx, 'EXHIBIT', 100, 54, 2.4);
+  ctx.strokeStyle = 'rgba(212,175,110,.34)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(38, 74);
+  ctx.lineTo(W - 38, 74);
+  ctx.stroke();
   const t = title.length > 18 ? title.slice(0, 18) + '…' : title;
-  let fs = 36;
+  let fs = 33;
   ctx.font = `700 ${fs}px ${KR_FONT}`;
-  while (fs > 20 && ctx.measureText(t).width > W - 68) { fs -= 2; ctx.font = `700 ${fs}px ${KR_FONT}`; }
-  ctx.fillText(t, 34, 104);
+  while (fs > 17 && ctx.measureText(t).width > W - 80) { fs -= 2; ctx.font = `700 ${fs}px ${KR_FONT}`; }
+  ctx.fillStyle = '#f6ecd8';
+  ctx.fillText(t, 38, 109);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
+
+// 입구 안내 이젤에 세울 전시 안내판
+function makeSignTexture() {
+  const W = 512, H = 640;
+  const c = makeCanvas(W, H);
+  const ctx = c.getContext('2d');
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#fdf9f1');
+  g.addColorStop(1, '#efe4d1');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  grain(ctx, W, H, 1100, 0.05);
+  ctx.strokeStyle = 'rgba(126,99,62,.34)';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(24, 24, W - 48, H - 48);
+  ctx.strokeStyle = 'rgba(126,99,62,.16)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(33, 33, W - 66, H - 66);
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(150,118,70,.92)';
+  ctx.font = `700 15px ${KR_FONT}`;
+  const label = 'PHOTO EXHIBITION';
+  const gap = 5;
+  let lw = -gap;
+  for (const ch of label) lw += ctx.measureText(ch).width + gap;
+  drawSpaced(ctx, label, (W - lw) / 2, 112, gap);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#2a2118';
+  ctx.font = `700 54px Georgia, 'Times New Roman', serif`;
+  ctx.fillText('Ru1eTheWorld', W / 2, 190);
+
+  ctx.strokeStyle = 'rgba(126,99,62,.45)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(W / 2 - 70, 232);
+  ctx.lineTo(W / 2 + 70, 232);
+  ctx.stroke();
+
+  ctx.fillStyle = '#3b2f22';
+  ctx.font = `800 34px ${KR_FONT}`;
+  ctx.fillText('임재범 40주년 사진전', W / 2, 292);
+  ctx.fillStyle = 'rgba(90,74,52,.78)';
+  ctx.font = `600 21px ${KR_FONT}`;
+  ctx.fillText('열 점의 사진, 세 편의 영상', W / 2, 340);
+  ctx.fillStyle = 'rgba(90,74,52,.62)';
+  ctx.font = `500 19px ${KR_FONT}`;
+  ctx.fillText('천천히 둘러보세요 ✨', W / 2, 462);
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(150,118,70,.78)';
+  ctx.font = `600 13px ${KR_FONT}`;
+  const foot = 'TAKE YOUR TIME';
+  const fgap = 4;
+  let fw = -fgap;
+  for (const ch of foot) fw += ctx.measureText(ch).width + fgap;
+  drawSpaced(ctx, foot, (W - fw) / 2, 520, fgap);
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+// 화분 잎 — 가느다란 잎사귀 한 장(알파 컷아웃)
+function makeLeafTexture() {
+  const W = 128, H = 256;
+  const c = makeCanvas(W, H);
+  const ctx = c.getContext('2d');
+  const g = ctx.createLinearGradient(0, H, 0, 0);
+  g.addColorStop(0, '#2c4626');
+  g.addColorStop(0.5, '#3d6a33');
+  g.addColorStop(1, '#67974d');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(W / 2, 6);
+  ctx.bezierCurveTo(W * 0.96, H * 0.30, W * 0.86, H * 0.74, W * 0.58, H - 6);
+  ctx.lineTo(W * 0.42, H - 6);
+  ctx.bezierCurveTo(W * 0.14, H * 0.74, W * 0.04, H * 0.30, W / 2, 6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(214,238,190,.32)';
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  ctx.moveTo(W / 2, 18);
+  ctx.lineTo(W / 2, H - 16);
+  ctx.stroke();
+  for (let i = 1; i < 7; i++) {
+    const y = 22 + (H - 44) * (i / 7);
+    ctx.strokeStyle = 'rgba(214,238,190,.15)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(W / 2, y);
+    ctx.lineTo(W * 0.78, y - 16);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(W / 2, y);
+    ctx.lineTo(W * 0.22, y - 16);
+    ctx.stroke();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+// 빛가루 한 알 — 부드러운 원형
+function makeDustTexture() {
+  const s = 64;
+  const c = makeCanvas(s, s);
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  g.addColorStop(0, 'rgba(255,244,222,1)');
+  g.addColorStop(0.35, 'rgba(255,226,178,.55)');
+  g.addColorStop(1, 'rgba(255,214,150,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, s, s);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+// 빛 원뿔 지오메트리 — 꼭대기는 밝고 바닥으로 갈수록 사라지는 가산용 원뿔
+function makeLightConeGeometry(radius, height) {
+  const geo = new THREE.ConeGeometry(radius, height, 24, 1, true);
+  const pos = geo.attributes.position;
+  const colors = new Float32Array(pos.count * 3);
+  for (let i = 0; i < pos.count; i++) {
+    const t = clamp((pos.getY(i) + height / 2) / height, 0, 1);
+    const a = Math.pow(t, 1.55) * 0.5;
+    colors[i * 3] = a;
+    colors[i * 3 + 1] = a * 0.9;
+    colors[i * 3 + 2] = a * 0.7;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  return geo;
+}
+
 function makeGlowTexture() {
   const s = 256;
   const c = makeCanvas(s, s);
@@ -1672,7 +1850,7 @@ const ceilingLights = [];
 const wallTex = makeWallTexture();
 const floorTex = makeFloorTexture();
 const wallMat = new THREE.MeshStandardMaterial({ color: THEMES.light.wall, map: wallTex, roughness: 0.96, metalness: 0 });
-const floorMat = new THREE.MeshStandardMaterial({ color: THEMES.light.floor, map: floorTex, roughness: 0.62, metalness: 0.04 });
+const floorMat = new THREE.MeshStandardMaterial({ color: THEMES.light.floor, map: floorTex, roughness: 0.55, metalness: 0.06 });
 const ceilMat = new THREE.MeshBasicMaterial({ color: THEMES.light.ceiling });
 const baseMat = new THREE.MeshStandardMaterial({ color: THEMES.light.base, roughness: 0.8, metalness: 0.05 });
 const frameMat = new THREE.MeshStandardMaterial({ color: THEMES.light.frame, roughness: 0.44, metalness: 0.22 });
@@ -1720,6 +1898,39 @@ const floorPoolMat = new THREE.MeshBasicMaterial({ map: glowTex, transparent: tr
   scene.add(pool);
 });
 
+/* ------------------------------------------- 스포트라이트 레일 · 등기구 */
+const railMat = new THREE.MeshStandardMaterial({ color: 0x1b1d22, roughness: 0.46, metalness: 0.68 });
+const fixtureMat = new THREE.MeshStandardMaterial({ color: 0x23252b, roughness: 0.38, metalness: 0.74 });
+const lensMat = new THREE.MeshBasicMaterial({ color: 0xffeccd });
+const RAIL_INSET = 0.62;
+function addRail(w, d, x, z) {
+  const rail = new THREE.Mesh(new THREE.BoxGeometry(w, 0.055, d), railMat);
+  rail.position.set(x, ROOM.h - 0.078, z);
+  scene.add(rail);
+  const count = Math.max(2, Math.round(Math.max(w, d) / 2.6));
+  for (let i = 0; i < count; i++) {
+    const t = i / (count - 1);
+    const bx = w > d ? (x - w / 2 + 0.3 + (w - 0.6) * t) : x;
+    const bz = w > d ? z : (z - d / 2 + 0.3 + (d - 0.6) * t);
+    const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.062, 0.032), railMat);
+    bracket.position.set(bx, ROOM.h - 0.044, bz);
+    scene.add(bracket);
+  }
+}
+addRail(ROOM.w - 0.4, 0.05, 0, -ROOM.d / 2 + RAIL_INSET);
+addRail(0.05, ROOM.d - 0.4, -ROOM.w / 2 + RAIL_INSET, 0);
+addRail(0.05, ROOM.d - 0.4, ROOM.w / 2 - RAIL_INSET, 0);
+
+// 빛 원뿔 · 바닥 반사광 — 액자마다 하나씩, 무거운 실시간 그림자 대신 가산 합성
+const coneMat = new THREE.MeshBasicMaterial({
+  vertexColors: true, transparent: true, opacity: 0.3,
+  blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false
+});
+const reflectMat = new THREE.MeshBasicMaterial({
+  map: glowTex, color: 0xffe9c8, transparent: true, opacity: 0.16,
+  blending: THREE.AdditiveBlending, depthWrite: false, fog: false
+});
+
 // 러그
 const rugCanvas = makeCanvas(256, 256);
 {
@@ -1756,6 +1967,145 @@ bench.add(cushion);
 bench.position.set(0, 0, -4.2);
 scene.add(bench);
 const BENCH_BOX = { x: 0, z: -4.2, hw: 1.75, hd: 0.55 };
+
+/* ------------------------------------- 두 번째 벤치 · 화분 · 안내 이젤 */
+const BENCH_BOXES = [BENCH_BOX];
+const obstacles = [];   // 화분·이젤처럼 작은 원형 장애물 { x, z, r }
+
+// 입구 쪽에 낮게 놓는 두 번째 원목 벤치 (전면 벽 아래 — 작품 동선과 겹치지 않는다)
+const bench2 = new THREE.Group();
+const seat2 = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.13, 0.82), woodMat);
+seat2.position.y = 0.44;
+bench2.add(seat2);
+[-0.98, 0.98].forEach((x) => {
+  const leg = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.44, 0.68), metalMat);
+  leg.position.set(x, 0.22, 0);
+  bench2.add(leg);
+});
+const cushion2 = new THREE.Mesh(
+  new THREE.BoxGeometry(2.42, 0.06, 0.7),
+  new THREE.MeshStandardMaterial({ color: 0xcfc0aa, roughness: 0.9 })
+);
+cushion2.position.y = 0.505;
+bench2.add(cushion2);
+bench2.position.set(1.7, 0, 7.5);
+bench2.name = 'bench2';
+scene.add(bench2);
+BENCH_BOXES.push({ x: 1.7, z: 7.5, hw: 1.32, hd: 0.48 });
+
+// 화분 — 전시장 모서리와 여백에만 놓는다
+const leafTex = makeLeafTexture();
+const leafMat = new THREE.MeshStandardMaterial({
+  map: leafTex, transparent: true, alphaTest: 0.38, roughness: 0.82, metalness: 0.02,
+  side: THREE.DoubleSide
+});
+const potMat = new THREE.MeshStandardMaterial({ color: 0x2c2723, roughness: 0.52, metalness: 0.22 });
+const soilMat = new THREE.MeshStandardMaterial({ color: 0x2a211a, roughness: 1 });
+
+function makePlant(x, z, scale, name) {
+  const g = new THREE.Group();
+  const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.17, 0.36, 24, 1, true), potMat);
+  pot.position.y = 0.18;
+  g.add(pot);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.231, 0.013, 8, 26), potMat);
+  rim.rotation.x = Math.PI / 2;
+  rim.position.y = 0.358;
+  g.add(rim);
+  const soil = new THREE.Mesh(new THREE.CircleGeometry(0.216, 22), soilMat);
+  soil.rotation.x = -Math.PI / 2;
+  soil.position.y = 0.342;
+  g.add(soil);
+  const blades = 9;
+  for (let i = 0; i < blades; i++) {
+    const pivot = new THREE.Group();
+    pivot.rotation.y = (i / blades) * Math.PI * 2 + Math.random() * 0.4;
+    pivot.position.y = 0.34;
+    const h = 0.62 + Math.random() * 0.5;
+    const holder = new THREE.Group();
+    holder.rotation.x = 0.16 + Math.random() * 0.24;
+    const blade = new THREE.Mesh(new THREE.PlaneGeometry(0.15 + Math.random() * 0.05, h), leafMat);
+    blade.position.y = h / 2;
+    holder.add(blade);
+    pivot.add(holder);
+    g.add(pivot);
+  }
+  g.position.set(x, 0, z);
+  g.scale.setScalar(scale);
+  g.name = name;
+  scene.add(g);
+  obstacles.push({ x, z, r: 0.34 * scale });
+  return g;
+}
+makePlant(-5.5, 7.2, 1.05, 'plantA');
+makePlant(5.5, 7.2, 0.95, 'plantB');
+makePlant(5.55, -7.4, 1.1, 'plantC');
+
+// 안내 이젤 — 전면 벽 쪽, 작품을 가리지 않는 자리
+const signTex = makeSignTexture();
+const easelWood = new THREE.MeshStandardMaterial({ color: 0x8a6742, roughness: 0.62, metalness: 0.04 });
+function makeEasel(x, z, rotY, name) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.rotation.y = rotY;
+  const legGeo = new THREE.BoxGeometry(0.042, 1.36, 0.042);
+  [-0.32, 0.32].forEach((lx) => {
+    const leg = new THREE.Mesh(legGeo, easelWood);
+    leg.position.set(lx, 0.68, 0.1);
+    leg.rotation.z = lx > 0 ? -0.05 : 0.05;
+    g.add(leg);
+  });
+  const backLeg = new THREE.Mesh(legGeo, easelWood);
+  backLeg.position.set(0, 0.6, -0.3);
+  backLeg.rotation.x = 0.34;
+  g.add(backLeg);
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.032, 0.045), easelWood);
+  bar.position.set(0, 0.28, 0.14);
+  g.add(bar);
+  const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.036, 0.13), easelWood);
+  shelf.position.set(0, 0.86, 0.1);
+  g.add(shelf);
+  const signW = 0.6, signH = 0.75;
+  const signMat = new THREE.MeshStandardMaterial({ map: signTex, roughness: 0.66, metalness: 0.02 });
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(signW, signH), signMat);
+  sign.position.set(0, 0.88 + signH / 2 - 0.02, 0.138);
+  sign.rotation.x = -0.07;
+  g.add(sign);
+  const backSign = new THREE.Mesh(new THREE.PlaneGeometry(signW, signH), signMat);
+  backSign.position.set(0, 0.88 + signH / 2 - 0.02, 0.104);
+  backSign.rotation.set(-0.07, Math.PI, 0);
+  g.add(backSign);
+  g.name = name;
+  scene.add(g);
+  obstacles.push({ x, z, r: 0.42 });
+  return g;
+}
+makeEasel(-2.5, 7.15, 2.8, 'easel');
+
+/* ---------------------------------------------- 공기 중 골드 빛가루 */
+const DUST_COUNT = 112;
+const dustPos = new Float32Array(DUST_COUNT * 3);
+const dustVel = new Float32Array(DUST_COUNT);
+const dustPhase = new Float32Array(DUST_COUNT);
+const dustSway = new Float32Array(DUST_COUNT);
+for (let i = 0; i < DUST_COUNT; i++) {
+  dustPos[i * 3] = (Math.random() - 0.5) * (ROOM.w - 1.6);
+  dustPos[i * 3 + 1] = 0.2 + Math.random() * (ROOM.h - 0.5);
+  dustPos[i * 3 + 2] = (Math.random() - 0.5) * (ROOM.d - 1.6);
+  dustVel[i] = 0.018 + Math.random() * 0.05;
+  dustPhase[i] = Math.random() * Math.PI * 2;
+  dustSway[i] = 0.25 + Math.random() * 0.5;
+}
+const dustGeo = new THREE.BufferGeometry();
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+const dustMat = new THREE.PointsMaterial({
+  size: 0.075, map: makeDustTexture(), color: 0xffd7a0, transparent: true,
+  opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+});
+const goldDust = new THREE.Points(dustGeo, dustMat);
+goldDust.name = 'goldDust';
+goldDust.frustumCulled = false;
+scene.add(goldDust);
+let dustT = 0;
 
 /* --------------------------------------------------------------- frames */
 // 액자 크기는 사진의 실제 비율을 따른다 (긴 변 = ART_UNIT)
@@ -1870,14 +2220,56 @@ function buildFrame(index, spec, data, img) {
     }
   }
 
-  // 이름표
+  // 작품 명판 — 다크 브라스 판에 금색 테두리. 제목은 액자 데이터와 함께 갱신된다
   const plaqueTex = makePlaque(index + 1, data.title);
-  const plaque = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.68, 0.199),
-    new THREE.MeshStandardMaterial({ map: plaqueTex, roughness: 0.36, metalness: 0.62 })
+  const plaqueMat = new THREE.MeshStandardMaterial({ map: plaqueTex, roughness: 0.4, metalness: 0.56 });
+  const plaqueY = -outerH / 2 - 0.235;
+  const plaque = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.181), plaqueMat);
+  plaque.position.set(0, plaqueY, 0.022);
+  const plaquePlate = new THREE.Mesh(
+    new THREE.BoxGeometry(0.664, 0.225, 0.022),
+    new THREE.MeshStandardMaterial({ color: 0x1d1a15, roughness: 0.48, metalness: 0.5 })
   );
-  plaque.position.set(0, -outerH / 2 - 0.215, 0.012);
+  plaquePlate.position.set(0, plaqueY, 0.008);
+  plaque.userData.frameIndex = index;
+  plaquePlate.userData.frameIndex = index;
+  group.add(plaquePlate);
   group.add(plaque);
+  hitMeshes.push(plaque, plaquePlate);   // 명판을 눌러도 작품이 열린다
+
+  // 액자를 비추는 등기구 — 천장 레일에서 액자 쪽으로 매달린 작은 스포트
+  const headPos = new THREE.Vector3(0, ROOM.h - FRAME_Y - 0.16, RAIL_INSET);
+  const aimPos = new THREE.Vector3(0, 0.02, 0.028);
+  const beamDir = aimPos.clone().sub(headPos).normalize();
+  const head = new THREE.Group();
+  head.position.copy(headPos);
+  head.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), beamDir);
+  const canBody = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.044, 0.14, 12), fixtureMat);
+  canBody.position.y = -0.02;
+  head.add(canBody);
+  const lens = new THREE.Mesh(new THREE.CircleGeometry(0.04, 14), lensMat);
+  lens.rotation.x = Math.PI / 2;
+  lens.position.y = -0.092;
+  head.add(lens);
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.1, 8), fixtureMat);
+  stem.position.y = 0.06;
+  head.add(stem);
+  group.add(head);
+
+  // 빛 원뿔 — 등기구에서 액자로 번지는 은은한 빛
+  const beamLen = Math.max(0.4, headPos.distanceTo(aimPos) - 0.02);
+  const beam = new THREE.Mesh(makeLightConeGeometry(0.5, beamLen), coneMat);
+  beam.position.copy(headPos).lerp(aimPos, 0.5);
+  beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), beamDir);
+  beam.name = 'spotCone' + index;
+  group.add(beam);
+
+  // 바닥 반사광 — 액자 앞 바닥에 번지는 빛 웅덩이
+  const reflect = new THREE.Mesh(new THREE.PlaneGeometry(outerW + 0.55, 1.9), reflectMat);
+  reflect.rotation.x = -Math.PI / 2;
+  reflect.position.set(0, -FRAME_Y + 0.011, 0.75);
+  reflect.name = 'floorReflect' + index;
+  group.add(reflect);
 
   // 벽면 글로우
   const glow = new THREE.Mesh(
@@ -2736,6 +3128,33 @@ function tick() {
     f.print.material.emissiveIntensity = themeState.emissive + 0.05 + (f.isVideo ? 0.22 : 0);
   }
 
+  // 스포트라이트 원뿔 · 바닥 반사 · 빛가루 — 테마 밝기에 맞춰 세기를 맞춘다
+  coneMat.opacity = 0.14 + themeState.glow * 0.85;
+  reflectMat.opacity = 0.09 + themeState.glow * 0.4;
+  dustMat.opacity = 0.30 + themeState.glow * 0.8;
+
+  // 은은하게 떠다니는 골드 빛가루
+  dustT += dt;
+  const dp = dustGeo.attributes.position.array;
+  for (let i = 0; i < DUST_COUNT; i++) {
+    const i3 = i * 3;
+    dp[i3 + 1] += dustVel[i] * dt;
+    dp[i3] += Math.sin(dustT * dustSway[i] + dustPhase[i]) * 0.085 * dt;
+    dp[i3 + 2] += Math.cos(dustT * dustSway[i] * 0.83 + dustPhase[i]) * 0.085 * dt;
+    if (dp[i3 + 1] > ROOM.h - 0.18) {
+      dp[i3 + 1] = 0.16;
+      dp[i3] = (Math.random() - 0.5) * (ROOM.w - 1.6);
+      dp[i3 + 2] = (Math.random() - 0.5) * (ROOM.d - 1.6);
+    }
+    const limX = ROOM.w / 2 - 0.6;
+    const limZ = ROOM.d / 2 - 0.6;
+    if (dp[i3] > limX) dp[i3] = limX;
+    if (dp[i3] < -limX) dp[i3] = -limX;
+    if (dp[i3 + 2] > limZ) dp[i3 + 2] = limZ;
+    if (dp[i3 + 2] < -limZ) dp[i3 + 2] = -limZ;
+  }
+  dustGeo.attributes.position.needsUpdate = true;
+
   // 이동
   if (!paused) {
     let ix = 0, iz = 0;
@@ -2766,16 +3185,30 @@ function tick() {
     player.x = clamp(player.x, -limX, limX);
     player.z = clamp(player.z, -limZ, limZ);
 
-    // 벤치 충돌
-    const bx = Math.abs(player.x - BENCH_BOX.x);
-    const bz = Math.abs(player.z - BENCH_BOX.z);
-    const ox = BENCH_BOX.hw + PLAYER_R - bx;
-    const oz = BENCH_BOX.hd + PLAYER_R - bz;
-    if (ox > 0 && oz > 0) {
-      if (ox < oz) {
-        player.x += (player.x > BENCH_BOX.x ? 1 : -1) * ox;
-      } else {
-        player.z += (player.z > BENCH_BOX.z ? 1 : -1) * oz;
+    // 벤치 충돌 (전시장 가운데 + 입구 쪽)
+    for (const box of BENCH_BOXES) {
+      const bx = Math.abs(player.x - box.x);
+      const bz = Math.abs(player.z - box.z);
+      const ox = box.hw + PLAYER_R - bx;
+      const oz = box.hd + PLAYER_R - bz;
+      if (ox > 0 && oz > 0) {
+        if (ox < oz) {
+          player.x += (player.x > box.x ? 1 : -1) * ox;
+        } else {
+          player.z += (player.z > box.z ? 1 : -1) * oz;
+        }
+      }
+    }
+
+    // 화분·이젤 충돌 (원형)
+    for (const ob of obstacles) {
+      const dx = player.x - ob.x;
+      const dz = player.z - ob.z;
+      const d = Math.hypot(dx, dz);
+      const minD = ob.r + PLAYER_R;
+      if (d > 0.0001 && d < minD) {
+        player.x = ob.x + (dx / d) * minD;
+        player.z = ob.z + (dz / d) * minD;
       }
     }
 
