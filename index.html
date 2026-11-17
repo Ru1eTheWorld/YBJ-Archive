@@ -2894,7 +2894,7 @@ window.__gallery = {
   /* ------------------------------------------------------------- 엔진 상태 */
   var ctx = null;
   var master = null;
-  var levelValue = 0.42;            /* 전체 볼륨(아주 은은하게) */
+  var levelValue = 0.60;            /* 전체 볼륨(아주 은은하게) */
   var on = false;                   /* 사용자가 켜 둔 상태 */
   var ducked = false;               /* 영상 모달 등으로 잠시 멎은 상태 */
   var pumpTimer = 0;
@@ -3046,13 +3046,13 @@ window.__gallery = {
   function pad(when, chord, dur) {
     var g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, when);
-    g.gain.exponentialRampToValueAtTime(0.018, when + 1.1);
-    g.gain.setValueAtTime(0.018, when + dur * 0.7);
+    g.gain.exponentialRampToValueAtTime(0.014, when + 1.1);
+    g.gain.setValueAtTime(0.014, when + dur * 0.7);
     g.gain.exponentialRampToValueAtTime(0.0001, when + dur + 1.4);
 
     var lp = ctx.createBiquadFilter();
     lp.type = 'lowpass';
-    lp.frequency.value = 900;
+    lp.frequency.value = 1050;
     lp.Q.value = 0.3;
     lp.connect(g);
 
@@ -3083,7 +3083,7 @@ window.__gallery = {
       var jitter = function (amt) { return (rnd() - 0.5) * amt; };
 
       /* 베이스 */
-      piano(t0 + jitter(0.012), ch.bass, 1.2, 0.62);
+      piano(t0 + jitter(0.012), ch.bass, 1.2, 0.52);
       /* 베이스 옥타브 위를 한 번 더, 아주 여리게 */
       if (ci % 2 === 1) piano(t0 + BEAT * 2 + jitter(0.016), ch.bass + 12, 1.0, 0.28);
 
@@ -3092,14 +3092,14 @@ window.__gallery = {
       for (var s = 0; s < 8; s++) {
         var idx = ch.arp[s];
         var accent = (s === 0 || s === 4) ? 0.13 : 0;
-        var vel = 0.40 + accent + jitter(0.12);
+        var vel = 0.45 + accent + jitter(0.12);
         if (vel < 0.1) vel = 0.1;
         piano(t0 + s * (BEAT / 2) + jitter(0.014), voice[idx], BEAT * 1.25, vel);
       }
 
       /* 멜로디: 숨 쉬는 간격으로 두세 음 */
-      piano(t0 + BEAT * 0.5 + jitter(0.02), ch.mel[0], BEAT * 1.6, 0.5);
-      piano(t0 + BEAT * 2 + jitter(0.02), ch.mel[1], BEAT * 1.1, 0.42);
+      piano(t0 + BEAT * 0.5 + jitter(0.02), ch.mel[0], BEAT * 1.6, 0.55);
+      piano(t0 + BEAT * 2 + jitter(0.02), ch.mel[1], BEAT * 1.1, 0.47);
       if (rnd() > 0.45) piano(t0 + BEAT * 3 + jitter(0.02), ch.mel[2], BEAT * 0.9, 0.32);
 
       /* 패드 */
