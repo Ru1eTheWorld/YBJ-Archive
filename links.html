@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="format-detection" content="telephone=no">
-<meta name="theme-color" content="#08070a">
+<meta name="theme-color" content="#0d1526">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Ru1eTheWorld · 링크 허브</title>
@@ -15,32 +15,69 @@
   /* =========================================================
      RU1ETHEWORLD — LINK HUB
      단일 파일 · 외부 리소스 0개 · iPhone Safari 기준
+     딥 네이비 밤하늘 + 서울 실시간 날씨 배경
      ========================================================= */
   *,*::before,*::after{box-sizing:border-box;}
   html{-webkit-text-size-adjust:100%;}
   html,body{min-height:100%;}
 
   :root{
-    --bg:#08070a;
-    --bg-2:#0c0a10;
-    --ink:#f3ece0;
-    --ink-dim:rgba(243,236,224,.60);
-    --ink-faint:rgba(243,236,224,.38);
+    /* 딥 네이비 밤하늘 */
+    --sky-0:#0d1526;
+    --sky-1:#122036;
+    --sky-2:#16233d;
+    --glow-top:rgba(216,181,106,.14);
+    --glow-bot:rgba(64,92,164,.22);
+
+    --bg:#0d1526;
+    --bg-2:#16233d;
+    --ink:#f4eee2;
+    --ink-dim:rgba(235,239,248,.68);
+    --ink-faint:rgba(224,232,246,.40);
     --gold:#d8b56a;
     --gold-hi:#f6e6bd;
-    --gold-soft:rgba(216,181,106,.34);
-    --gold-line:rgba(216,181,106,.26);
-    --glass:rgba(255,255,255,.055);
-    --glass-2:rgba(255,255,255,.085);
-    --glass-line:rgba(255,255,255,.11);
-    --shadow:0 22px 46px -26px rgba(0,0,0,.95);
-    --shadow-soft:0 10px 24px -18px rgba(0,0,0,.9);
+    --gold-soft:rgba(216,181,106,.30);
+    --gold-line:rgba(216,181,106,.24);
+    --glass:rgba(126,158,212,.10);
+    --glass-2:rgba(20,32,55,.86);
+    --glass-line:rgba(150,180,225,.17);
+    --shadow:0 22px 46px -26px rgba(3,8,18,.95);
+    --shadow-soft:0 10px 26px -18px rgba(3,8,18,.90);
     --ring:rgba(216,181,106,.55);
     --hair:linear-gradient(90deg,transparent,var(--gold-soft),transparent);
     --radius:20px;
     color-scheme:dark;
   }
+
+  /* ── 날씨별 하늘 톤 (다크 모드) ─────────────────────────── */
+  html[data-theme="dark"][data-wx="snow"]{
+    --sky-0:#0c1728;--sky-1:#12233d;--sky-2:#172c47;
+    --glow-top:rgba(150,196,240,.15);--glow-bot:rgba(96,146,204,.26);
+  }
+  html[data-theme="dark"][data-wx="rain"]{
+    --sky-0:#0a1120;--sky-1:#0f1a2c;--sky-2:#132234;
+    --glow-top:rgba(216,181,106,.07);--glow-bot:rgba(74,108,150,.28);
+  }
+  html[data-theme="dark"][data-wx="cloudy"]{
+    --sky-0:#0d1524;--sky-1:#131f31;--sky-2:#182538;
+    --glow-top:rgba(190,206,232,.10);--glow-bot:rgba(90,116,158,.22);
+  }
+  html[data-theme="dark"][data-wx="clear"][data-night="1"]{
+    --sky-0:#0b1322;--sky-1:#101d34;--sky-2:#152540;
+    --glow-top:rgba(216,181,106,.12);--glow-bot:rgba(58,74,150,.26);
+  }
+  html[data-theme="dark"][data-wx="clear"][data-night="0"]{
+    --sky-0:#101c30;--sky-1:#152640;--sky-2:#1a2c49;
+    --glow-top:rgba(246,230,189,.20);--glow-bot:rgba(96,126,200,.20);
+  }
+
   html[data-theme="light"]{
+    --sky-0:#f7f1e7;
+    --sky-1:#f2e9da;
+    --sky-2:#ece0cc;
+    --glow-top:rgba(216,181,106,.40);
+    --glow-bot:rgba(146,126,228,.28);
+
     --bg:#f4ecdf;
     --bg-2:#ece0cc;
     --ink:#241f18;
@@ -51,7 +88,7 @@
     --gold-soft:rgba(161,123,51,.32);
     --gold-line:rgba(140,104,42,.24);
     --glass:rgba(255,255,255,.62);
-    --glass-2:rgba(255,255,255,.86);
+    --glass-2:rgba(255,255,255,.90);
     --glass-line:rgba(120,92,44,.16);
     --shadow:0 20px 40px -26px rgba(88,64,26,.55);
     --shadow-soft:0 8px 20px -16px rgba(88,64,26,.5);
@@ -63,44 +100,70 @@
     margin:0;
     font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
     color:var(--ink);
-    background:var(--bg);
+    background:var(--sky-0);
     -webkit-font-smoothing:antialiased;
     -webkit-tap-highlight-color:transparent;
     overscroll-behavior-y:none;
     transition:background .5s ease,color .4s ease;
   }
-  html[data-theme="light"] body{background:var(--bg-2);}
 
-  /* ── 조명 · 질감 (외부 이미지 없이 CSS만) ─────────────── */
-  .aura{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+  /* ── 밤하늘 · 조명 · 질감 (외부 이미지 없이 CSS만) ─────── */
+  .aura{
+    position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+    background:linear-gradient(180deg,var(--sky-0) 0%,var(--sky-1) 48%,var(--sky-2) 100%);
+    transition:background .8s ease;
+  }
   .aura::before{
-    content:"";position:absolute;left:50%;top:-40vh;width:170vw;height:88vh;
+    content:"";position:absolute;left:50%;top:-42vh;width:175vw;height:92vh;
     transform:translateX(-50%);
-    background:radial-gradient(closest-side,rgba(216,181,106,.15),rgba(216,181,106,.05) 46%,rgba(216,181,106,0) 76%);
+    background:radial-gradient(closest-side,var(--glow-top),rgba(216,181,106,.03) 48%,rgba(216,181,106,0) 78%);
+    transition:background .8s ease;
   }
   .aura::after{
-    content:"";position:absolute;left:50%;bottom:-30vh;width:140vw;height:60vh;
+    content:"";position:absolute;left:50%;bottom:-32vh;width:150vw;height:66vh;
     transform:translateX(-50%);
-    background:radial-gradient(closest-side,rgba(108,86,206,.20),rgba(108,86,206,0) 74%);
+    background:radial-gradient(closest-side,var(--glow-bot),rgba(64,92,164,0) 76%);
+    transition:background .8s ease;
   }
   .aura i{
     position:absolute;inset:0;
     background:
-      repeating-linear-gradient(0deg,rgba(255,255,255,.016) 0 1px,transparent 1px 3px),
-      radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.05),transparent 58%),
-      radial-gradient(140% 100% at 50% 120%,rgba(0,0,0,.5),transparent 62%);
+      repeating-linear-gradient(0deg,rgba(255,255,255,.014) 0 1px,transparent 1px 3px),
+      radial-gradient(120% 90% at 50% 0%,rgba(190,214,255,.055),transparent 58%),
+      radial-gradient(140% 100% at 50% 120%,rgba(2,6,14,.55),transparent 62%);
   }
-  html[data-theme="light"] .aura::before{background:radial-gradient(closest-side,rgba(216,181,106,.40),rgba(216,181,106,.12) 48%,rgba(216,181,106,0) 78%);}
-  html[data-theme="light"] .aura::after{background:radial-gradient(closest-side,rgba(146,126,228,.28),rgba(146,126,228,0) 74%);}
+  /* 맑은 낮의 오로라 빛 */
+  .aura b{
+    position:absolute;inset:-24% -34%;opacity:0;pointer-events:none;
+    background:linear-gradient(114deg,transparent 18%,rgba(138,146,255,.13) 40%,rgba(246,230,189,.13) 56%,transparent 80%);
+    -webkit-filter:blur(34px);filter:blur(34px);
+    transition:opacity 1.4s ease;
+  }
+  html[data-theme="dark"][data-wx="clear"][data-night="0"] .aura b{
+    opacity:1;animation:drift 28s ease-in-out infinite alternate;
+  }
+  @keyframes drift{
+    from{transform:translateX(-12%) rotate(-5deg);}
+    to{transform:translateX(12%) rotate(-5deg);}
+  }
   html[data-theme="light"] .aura i{
     background:
-      radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.7),transparent 60%),
+      radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.72),transparent 60%),
       radial-gradient(140% 100% at 50% 120%,rgba(150,118,60,.16),transparent 62%);
   }
 
+  /* ── 날씨 파티클 캔버스 (터치 방해 없음) ───────────────── */
+  #fx{
+    position:fixed;inset:0;z-index:1;
+    width:100%;height:100%;
+    pointer-events:none;
+    opacity:.95;transition:opacity .9s ease;
+  }
+  html[data-theme="light"] #fx{opacity:.26;}
+
   /* ── 레이아웃 ─────────────────────────────────────────── */
   .hub{
-    position:relative;z-index:1;
+    position:relative;z-index:2;
     width:100%;max-width:520px;margin:0 auto;
     padding:calc(10px + env(safe-area-inset-top)) 20px calc(26px + env(safe-area-inset-bottom));
     min-height:100vh;min-height:100svh;
@@ -175,6 +238,31 @@
     background:var(--hair);
   }
 
+  /* ── 날씨 상태 (아주 작게 · 로드 실패 시 숨김) ─────────── */
+  .wx{
+    display:inline-flex;align-items:center;gap:7px;
+    margin:13px auto 0;padding:5px 11px 4px;border-radius:999px;
+    font-size:8.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--ink-faint);white-space:nowrap;max-width:100%;
+    background:rgba(126,158,212,.07);
+    border:1px solid rgba(150,180,225,.14);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    opacity:0;visibility:hidden;
+    transition:opacity .8s ease;
+  }
+  .wx.on{opacity:1;visibility:visible;}
+  .wx::before{
+    content:"";flex:0 0 auto;width:4px;height:4px;border-radius:50%;
+    background:var(--gold);opacity:.9;
+    box-shadow:0 0 8px rgba(216,181,106,.75);
+  }
+  .wx span{letter-spacing:.18em;}
+  .wx em{font-style:normal;letter-spacing:.05em;color:var(--ink-dim);}
+  html[data-theme="light"] .wx{
+    background:rgba(255,255,255,.55);
+    border-color:rgba(120,92,44,.16);
+  }
+
   /* ── 링크 버튼 ────────────────────────────────────────── */
   .links{display:flex;flex-direction:column;gap:12px;margin-top:6px;}
   .link{
@@ -183,9 +271,9 @@
     padding:15px 16px;border-radius:var(--radius);
     text-decoration:none;color:inherit;overflow:hidden;
     background:
-      linear-gradient(150deg,rgba(255,255,255,.075),rgba(255,255,255,.025) 62%);
+      linear-gradient(150deg,rgba(46,68,106,.58),rgba(17,29,50,.66) 64%);
     border:1px solid var(--glass-line);
-    box-shadow:var(--shadow-soft),inset 0 1px 0 rgba(255,255,255,.07);
+    box-shadow:var(--shadow-soft),inset 0 1px 0 rgba(196,216,255,.10);
     -webkit-backdrop-filter:blur(16px) saturate(1.1);
     backdrop-filter:blur(16px) saturate(1.1);
     transition:transform .22s ease,border-color .28s ease,box-shadow .28s ease,background .28s ease;
@@ -318,7 +406,8 @@
 </style>
 </head>
 <body>
-<div class="aura" aria-hidden="true"><i></i></div>
+<div class="aura" aria-hidden="true"><i></i><b></b></div>
+<canvas id="fx" width="390" height="844" aria-hidden="true"></canvas>
 
 <main class="hub">
   <div class="topbar">
@@ -331,6 +420,9 @@
     <h1><span class="at">@</span>Ru1eTheWorld</h1>
     <p class="tagline">방구석에서 함께 보는 임재범 찍덕의 아카이브</p>
     <div class="rule" aria-hidden="true"></div>
+    <div class="wx" id="wx" role="status" aria-live="polite">
+      <span id="wxPlace">SEOUL</span><em id="wxInfo">날씨 확인 중</em>
+    </div>
   </header>
 
   <nav class="links" aria-label="아카이브 링크">
@@ -399,7 +491,7 @@
       themeBtn.setAttribute('title', light ? '어두운 모드로 보기' : '밝은 모드로 보기');
     }
     if (metaTheme) {
-      metaTheme.setAttribute('content', light ? '#f7f1e7' : '#08070a');
+      metaTheme.setAttribute('content', light ? '#f7f1e7' : '#0d1526');
     }
   }
 
@@ -485,6 +577,305 @@
   initTheme();
   if (themeBtn) { themeBtn.addEventListener('click', toggleTheme); }
   if (shareBtn) { shareBtn.addEventListener('click', share); }
+})();
+</script>
+
+<script>
+/* ── 서울 실시간 날씨 배경 (wttr.in) ─────────────────────── */
+(function () {
+  'use strict';
+
+  var ROOT = document.documentElement;
+  var canvas = document.getElementById('fx');
+  var wxEl = document.getElementById('wx');
+  var wxInfo = document.getElementById('wxInfo');
+  if (!canvas || !canvas.getContext) { return; }
+  var ctx = canvas.getContext('2d');
+  var TAU = Math.PI * 2;
+
+  var MODES = { snow: '눈', rain: '비', clear: '맑음', cloudy: '흐림' };
+
+  /* WWO(=wttr.in weatherCode) 분류 */
+  var CODE_SNOW = [179,182,185,227,230,317,320,323,326,329,332,335,338,350,362,365,368,371,374,377,392,395,398];
+  var CODE_RAIN = [176,200,263,266,281,284,293,296,299,302,305,308,311,314,353,356,359,386,389];
+  var CODE_FOG  = [143,248,260];
+  var CODE_CLOUD = [116,119,122];
+
+  var REDUCE = false;
+  try { REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+
+  /* ── 서울 시각 (06:00~18:00 낮, 그 외 밤) ─────────────── */
+  function seoulHour() {
+    try {
+      var parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Seoul', hour: '2-digit', hourCycle: 'h23'
+      }).formatToParts(new Date());
+      for (var i = 0; i < parts.length; i++) {
+        if (parts[i].type === 'hour') {
+          var h = parseInt(parts[i].value, 10);
+          if (!isNaN(h)) { return h % 24; }
+        }
+      }
+    } catch (e) { /* 구형 사파리 */ }
+    return new Date().getHours();
+  }
+  function isNight() {
+    var h = seoulHour();
+    return (h < 6 || h >= 18);
+  }
+
+  function classify(code, cloudcover) {
+    var c = parseInt(code, 10);
+    if (isNaN(c)) { c = 0; }
+    var cloud = parseInt(cloudcover, 10);
+    if (isNaN(cloud)) { cloud = 0; }
+    if (CODE_SNOW.indexOf(c) >= 0) { return { mode: 'snow', label: '눈' }; }
+    if (CODE_RAIN.indexOf(c) >= 0) { return { mode: 'rain', label: '비' }; }
+    if (CODE_FOG.indexOf(c) >= 0) { return { mode: 'cloudy', label: '안개' }; }
+    if (CODE_CLOUD.indexOf(c) >= 0) { return { mode: 'cloudy', label: '흐림' }; }
+    if (c === 113) { return { mode: 'clear', label: '맑음' }; }
+    if (cloud >= 45) { return { mode: 'cloudy', label: '구름' }; }
+    return { mode: 'clear', label: '맑음' };
+  }
+
+  /* ── 상태 표 표시 ─────────────────────────────────────── */
+  function showBadge(label, temp) {
+    if (!wxEl || !wxInfo) { return; }
+    wxInfo.textContent = '· ' + label + (temp ? ' ' + temp + '°C' : '');
+    wxEl.classList.add('on');
+  }
+
+  /* ── 캔버스 파티클 ────────────────────────────────────── */
+  var W = 0, H = 0, DPR = 1;
+  var mode = 'none', night = false, parts = [], raf = null;
+
+  function isLight() { return ROOT.getAttribute('data-theme') === 'light'; }
+
+  function sizeCanvas() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = Math.max(1, canvas.clientWidth || window.innerWidth || 390);
+    H = Math.max(1, canvas.clientHeight || window.innerHeight || 844);
+    canvas.width = Math.round(W * DPR);
+    canvas.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+
+  function build() {
+    parts = [];
+    var i, n;
+    if (mode === 'snow') {
+      n = Math.round(Math.min(150, Math.max(62, W * H / 9000)));
+      for (i = 0; i < n; i++) {
+        parts.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: 0.8 + Math.random() * 1.7,
+          vy: 0.12 + Math.random() * 0.40,
+          a: 0.26 + Math.random() * 0.54,
+          ph: Math.random() * TAU,
+          sp: 0.35 + Math.random() * 0.8,
+          drift: 0.4 + Math.random() * 0.9
+        });
+      }
+    } else if (mode === 'rain') {
+      n = Math.round(Math.min(180, Math.max(72, W * H / 8000)));
+      for (i = 0; i < n; i++) {
+        parts.push({
+          x: Math.random() * (W + 160) - 60,
+          y: Math.random() * H,
+          len: 8 + Math.random() * 15,
+          vy: 3.4 + Math.random() * 4.0,
+          a: 0.07 + Math.random() * 0.15
+        });
+      }
+    } else if (mode === 'clear' && night) {
+      n = Math.round(Math.min(120, Math.max(48, W * H / 11000)));
+      for (i = 0; i < n; i++) {
+        parts.push({
+          x: Math.random() * W,
+          y: Math.random() * H * 0.94,
+          r: 0.35 + Math.random() * 1.15,
+          a: 0.14 + Math.random() * 0.52,
+          ph: Math.random() * TAU,
+          sp: 0.4 + Math.random() * 1.5
+        });
+      }
+    }
+  }
+
+  function drawSnow(t) {
+    var light = isLight();
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i];
+      p.y += p.vy;
+      if (p.y > H + 6) { p.y = -6; p.x = Math.random() * W; }
+      var x = p.x + Math.sin(t * p.sp + p.ph) * 7 * p.drift;
+      var a = p.a * (0.72 + 0.28 * Math.sin(t * p.sp * 1.6 + p.ph));
+      if (a <= 0) { continue; }
+      ctx.beginPath();
+      ctx.arc(x, p.y, p.r, 0, TAU);
+      ctx.fillStyle = light
+        ? 'rgba(126,158,200,' + (a * 0.85).toFixed(3) + ')'
+        : 'rgba(255,255,255,' + a.toFixed(3) + ')';
+      ctx.fill();
+    }
+  }
+
+  function drawRain() {
+    var light = isLight();
+    var col = light ? '74,104,144' : '188,214,248';
+    ctx.lineWidth = light ? 1.1 : 0.9;
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i];
+      p.y += p.vy;
+      p.x -= p.vy * 0.26;
+      if (p.y > H + 24) {
+        p.y = -24 - Math.random() * 80;
+        p.x = Math.random() * (W + 160);
+      }
+      if (p.x < -40) { p.x = W + 40; }
+      var a = light ? p.a * 0.9 : p.a;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x - p.len * 0.26, p.y - p.len);
+      ctx.strokeStyle = 'rgba(' + col + ',' + a.toFixed(3) + ')';
+      ctx.stroke();
+    }
+  }
+
+  function drawStars(t) {
+    var light = isLight();
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i];
+      var a = p.a * (0.55 + 0.45 * Math.sin(t * p.sp + p.ph));
+      if (a <= 0.02) { continue; }
+      if (p.r > 1.0) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * 3.4, 0, TAU);
+        ctx.fillStyle = light
+          ? 'rgba(161,123,51,' + (a * 0.10).toFixed(3) + ')'
+          : 'rgba(246,230,189,' + (a * 0.11).toFixed(3) + ')';
+        ctx.fill();
+      }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, TAU);
+      ctx.fillStyle = light
+        ? 'rgba(120,92,44,' + (a * 0.55).toFixed(3) + ')'
+        : 'rgba(255,247,228,' + a.toFixed(3) + ')';
+      ctx.fill();
+    }
+  }
+
+  function frame(ts) {
+    raf = null;
+    ctx.clearRect(0, 0, W, H);
+    var t = (ts || 0) / 1000;
+    if (mode === 'snow') { drawSnow(t); }
+    else if (mode === 'rain') { drawRain(); }
+    else if (mode === 'clear' && night) { drawStars(t); }
+    if (!REDUCE) { raf = window.requestAnimationFrame(frame); }
+  }
+
+  function kick() {
+    if (raf) { window.cancelAnimationFrame(raf); raf = null; }
+    ctx.clearRect(0, 0, W, H);
+    raf = window.requestAnimationFrame(frame);
+  }
+
+  function setMode(next, nextNight) {
+    mode = next || 'none';
+    night = !!nextNight;
+    if (mode !== 'none') {
+      ROOT.setAttribute('data-wx', mode);
+      ROOT.setAttribute('data-night', night ? '1' : '0');
+    }
+    sizeCanvas();
+    build();
+    if (mode === 'none') {
+      if (raf) { window.cancelAnimationFrame(raf); raf = null; }
+      ctx.clearRect(0, 0, W, H);
+      return;
+    }
+    kick();
+  }
+
+  /* ── 서울 날씨 요청 (4초 타임아웃) ────────────────────── */
+  function fetchSeoul() {
+    return new Promise(function (resolve, reject) {
+      var ctrl = null;
+      var timer = null;
+      var done = false;
+      function finish(fn, value) {
+        if (done) { return; }
+        done = true;
+        if (timer) { window.clearTimeout(timer); }
+        fn(value);
+      }
+      if (window.AbortController) {
+        try { ctrl = new AbortController(); } catch (e) { ctrl = null; }
+      }
+      timer = window.setTimeout(function () {
+        if (ctrl) { try { ctrl.abort(); } catch (e) {} }
+        finish(reject, new Error('timeout'));
+      }, 4000);
+      var opts = { cache: 'no-store', mode: 'cors' };
+      if (ctrl) { opts.signal = ctrl.signal; }
+      window.fetch('https://wttr.in/Seoul?format=j1', opts)
+        .then(function (res) {
+          if (!res.ok) { throw new Error('http ' + res.status); }
+          return res.json();
+        })
+        .then(function (data) { finish(resolve, data); })
+        .catch(function (err) { finish(reject, err); });
+    });
+  }
+
+  /* ── 시작 ─────────────────────────────────────────────── */
+  var forced = null;
+  try {
+    forced = new URLSearchParams(window.location.search).get('weather');
+  } catch (e) { forced = null; }
+  if (forced && !MODES[forced]) { forced = null; }
+
+  var nightNow = isNight();
+  sizeCanvas();
+  window.addEventListener('resize', function () {
+    sizeCanvas();
+    build();
+    if (mode !== 'none' && !raf) { kick(); }
+  }, { passive: true });
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+      if (raf) { window.cancelAnimationFrame(raf); raf = null; }
+    } else if (mode !== 'none' && !raf) {
+      kick();
+    }
+  });
+
+  if (forced) {
+    /* ?weather=snow|rain|clear|cloudy 미리보기 */
+    var previewNight = (forced === 'clear') ? nightNow : (nightNow && forced !== 'rain');
+    setMode(forced, previewNight);
+  } else {
+    /* fetch 전/실패 시: 기본 딥 네이비 + 별빛 */
+    setMode('clear', true);
+    fetchSeoul().then(function (data) {
+      var cc = data && data.current_condition && data.current_condition[0];
+      if (!cc) { return; }
+      var info = classify(cc.weatherCode, cc.cloudcover);
+      var temp = cc.temp_C ? String(cc.temp_C) : '';
+      if (!nightNow && info.mode === 'clear') {
+        showBadge(info.label, temp);
+        setMode('clear', false);
+        return;
+      }
+      setMode(info.mode, nightNow);
+      showBadge(info.label, temp);
+    }).catch(function () {
+      /* 조용히 기본 별빛 배경 유지 (배지도 표시하지 않음) */
+    });
+  }
 })();
 </script>
 <script data-goatcounter="https://ru1etheworld.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
