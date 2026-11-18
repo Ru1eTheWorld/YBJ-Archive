@@ -193,36 +193,25 @@
 
   /* ── 프로필 ───────────────────────────────────────────── */
   .profile{text-align:center;padding:30px 0 24px;}
+  /* 프로필 사진 — 원형 고정 테두리 (회전 애니메이션 없음) */
   .monogram{
     position:relative;width:88px;height:88px;margin:0 auto 16px;border-radius:50%;
-    display:grid;place-items:center;
-    background:
-      radial-gradient(120% 120% at 30% 18%,rgba(255,255,255,.16),transparent 60%),
-      linear-gradient(160deg,rgba(216,181,106,.20),rgba(216,181,106,.03) 60%);
+    overflow:hidden;background:#05080f;
     box-shadow:
-      0 0 0 1px var(--gold-soft),
-      0 0 0 6px rgba(216,181,106,.06),
-      0 20px 44px -22px rgba(216,181,106,.55),
-      inset 0 1px 0 rgba(255,255,255,.14);
+      0 0 0 1px rgba(216,181,106,.58),
+      0 0 0 5px rgba(216,181,106,.07),
+      0 18px 40px -22px rgba(216,181,106,.50);
   }
-  .monogram::after{
-    content:"";position:absolute;inset:-1px;border-radius:50%;
-    background:conic-gradient(from 210deg,transparent,rgba(246,230,189,.85),transparent 42%,transparent 72%,rgba(246,230,189,.5),transparent);
-    -webkit-mask:radial-gradient(closest-side,transparent 93%,#000 94%);
-    mask:radial-gradient(closest-side,transparent 93%,#000 94%);
-    opacity:.85;animation:spin 11s linear infinite;
+  .monogram img{
+    display:block;width:100%;height:100%;
+    object-fit:cover;object-position:50% 50%;border-radius:50%;
   }
-  @keyframes spin{to{transform:rotate(360deg);}}
-  .monogram span{
-    font-family:"Didot","Bodoni 72","Times New Roman",Georgia,serif;
-    font-size:42px;line-height:1;font-weight:400;letter-spacing:.02em;
-    background:linear-gradient(160deg,var(--gold-hi),var(--gold) 52%,#8d6a2b 120%);
-    -webkit-background-clip:text;background-clip:text;
-    -webkit-text-fill-color:transparent;color:var(--gold);
-    transform:translateY(1px);
-    filter:drop-shadow(0 1px 0 rgba(0,0,0,.35));
+  html[data-theme="light"] .monogram{
+    box-shadow:
+      0 0 0 1px rgba(161,123,51,.62),
+      0 0 0 5px rgba(161,123,51,.10),
+      0 18px 40px -24px rgba(60,45,15,.50);
   }
-  html[data-theme="light"] .monogram span{filter:none;}
 
   h1{
     margin:0 0 8px;font-size:23px;line-height:1.2;font-weight:700;
@@ -390,7 +379,6 @@
     .hub{padding-left:26px;padding-right:26px;}
     .profile{padding:42px 0 30px;}
     .monogram{width:96px;height:96px;}
-    .monogram span{font-size:46px;}
     h1{font-size:26px;}
     .tagline{font-size:13.5px;}
     .txt b{font-size:15.2px;}
@@ -416,7 +404,9 @@
   </div>
 
   <header class="profile">
-    <div class="monogram" aria-hidden="true"><span>R</span></div>
+    <div class="monogram">
+      <img src="./assets/profile.jpg" alt="임재범 직캠 프로필 사진" width="512" height="512" decoding="async">
+    </div>
     <h1><span class="at">@</span>Ru1eTheWorld</h1>
     <p class="tagline">방구석에서 함께 보는 임재범 찍덕의 아카이브</p>
     <div class="rule" aria-hidden="true"></div>
