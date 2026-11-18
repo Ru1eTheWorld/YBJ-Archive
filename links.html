@@ -591,6 +591,8 @@
   var CODE_FOG  = [143,248,260];
   var CODE_CLOUD = [116,119,122];
 
+  /* prefers-reduced-motion이 켜져 있어도 날씨(비·눈) 캔버스 애니메이션은 멈추지 않는다.
+     CSS 전환만 줄이고, 캔버스 루프는 항상 requestAnimationFrame으로 재생한다. */
   var REDUCE = false;
   try { REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
 
@@ -659,23 +661,24 @@
         parts.push({
           x: Math.random() * W,
           y: Math.random() * H,
-          r: 0.8 + Math.random() * 1.7,
-          vy: 0.12 + Math.random() * 0.40,
-          a: 0.26 + Math.random() * 0.54,
+          r: 0.9 + Math.random() * 1.9,
+          vy: 0.14 + Math.random() * 0.46,
+          a: 0.34 + Math.random() * 0.54,
           ph: Math.random() * TAU,
           sp: 0.35 + Math.random() * 0.8,
           drift: 0.4 + Math.random() * 0.9
         });
       }
     } else if (mode === 'rain') {
-      n = Math.round(Math.min(180, Math.max(72, W * H / 8000)));
+      n = Math.round(Math.min(210, Math.max(96, W * H / 6400)));
       for (i = 0; i < n; i++) {
         parts.push({
-          x: Math.random() * (W + 160) - 60,
+          x: Math.random() * (W + 200) - 80,
           y: Math.random() * H,
-          len: 8 + Math.random() * 15,
-          vy: 3.4 + Math.random() * 4.0,
-          a: 0.07 + Math.random() * 0.15
+          len: 14 + Math.random() * 22,
+          vy: 4.4 + Math.random() * 4.8,
+          a: 0.25 + Math.random() * 0.25,
+          w: 0.8 + Math.random() * 0.9
         });
       }
     } else if (mode === 'clear' && night) {
@@ -700,7 +703,7 @@
       p.y += p.vy;
       if (p.y > H + 6) { p.y = -6; p.x = Math.random() * W; }
       var x = p.x + Math.sin(t * p.sp + p.ph) * 7 * p.drift;
-      var a = p.a * (0.72 + 0.28 * Math.sin(t * p.sp * 1.6 + p.ph));
+      var a = p.a * (0.80 + 0.20 * Math.sin(t * p.sp * 1.6 + p.ph));
       if (a <= 0) { continue; }
       ctx.beginPath();
       ctx.arc(x, p.y, p.r, 0, TAU);
@@ -713,19 +716,20 @@
 
   function drawRain() {
     var light = isLight();
-    var col = light ? '74,104,144' : '188,214,248';
-    ctx.lineWidth = light ? 1.1 : 0.9;
+    var col = light ? '62,92,138' : '198,224,255';
+    ctx.lineCap = 'round';
     for (var i = 0; i < parts.length; i++) {
       var p = parts[i];
       p.y += p.vy;
       p.x -= p.vy * 0.26;
-      if (p.y > H + 24) {
-        p.y = -24 - Math.random() * 80;
-        p.x = Math.random() * (W + 160);
+      if (p.y > H + 28) {
+        p.y = -28 - Math.random() * 90;
+        p.x = Math.random() * (W + 200);
       }
-      if (p.x < -40) { p.x = W + 40; }
-      var a = light ? p.a * 0.9 : p.a;
+      if (p.x < -50) { p.x = W + 50; }
+      var a = light ? p.a * 0.95 : p.a;
       ctx.beginPath();
+      ctx.lineWidth = p.w * (light ? 1.5 : 1.15);
       ctx.moveTo(p.x, p.y);
       ctx.lineTo(p.x - p.len * 0.26, p.y - p.len);
       ctx.strokeStyle = 'rgba(' + col + ',' + a.toFixed(3) + ')';
@@ -763,7 +767,8 @@
     if (mode === 'snow') { drawSnow(t); }
     else if (mode === 'rain') { drawRain(); }
     else if (mode === 'clear' && night) { drawStars(t); }
-    if (!REDUCE) { raf = window.requestAnimationFrame(frame); }
+    /* REDUCE(모션 줄이기) 여부와 상관없이 날씨 애니메이션은 계속 돈다 */
+    raf = window.requestAnimationFrame(frame);
   }
 
   function kick() {
@@ -773,8 +778,15 @@
   }
 
   function setMode(next, nextNight) {
-    mode = next || 'none';
-    night = !!nextNight;
+    next = next || 'none';
+    nextNight = !!nextNight;
+    /* 캐시 → 실시간 갱신처럼 같은 배경이 다시 들어오면 파티클을 새로 만들지 않는다 */
+    if (next === mode && nextNight === night && next !== 'none' && parts.length) {
+      if (!raf) { kick(); }
+      return;
+    }
+    mode = next;
+    night = nextNight;
     if (mode !== 'none') {
       ROOT.setAttribute('data-wx', mode);
       ROOT.setAttribute('data-night', night ? '1' : '0');
@@ -789,7 +801,7 @@
     kick();
   }
 
-  /* ── 서울 날씨 요청 (4초 타임아웃) ────────────────────── */
+  /* ── 서울 날씨 요청 (8초 타임아웃) ────────────────────── */
   function fetchSeoul() {
     return new Promise(function (resolve, reject) {
       var ctrl = null;
@@ -807,7 +819,7 @@
       timer = window.setTimeout(function () {
         if (ctrl) { try { ctrl.abort(); } catch (e) {} }
         finish(reject, new Error('timeout'));
-      }, 4000);
+      }, 8000);
       var opts = { cache: 'no-store', mode: 'cors' };
       if (ctrl) { opts.signal = ctrl.signal; }
       window.fetch('https://wttr.in/Seoul?format=j1', opts)
@@ -820,6 +832,28 @@
     });
   }
 
+  /* ── 최근 성공한 서울 날씨 캐시 (15분 TTL) ────────────── */
+  var KEY_WX = 'ru1e.links.wx.v1';
+  var WX_TTL = 15 * 60 * 1000;
+
+  function readWxCache() {
+    try {
+      var raw = window.localStorage.getItem(KEY_WX);
+      if (!raw) { return null; }
+      var o = JSON.parse(raw);
+      if (!o || !MODES[o.mode] || typeof o.ts !== 'number') { return null; }
+      if (Date.now() - o.ts > WX_TTL) { return null; }
+      return o;
+    } catch (e) { return null; }
+  }
+  function writeWxCache(m, temp, label) {
+    try {
+      window.localStorage.setItem(KEY_WX, JSON.stringify({
+        mode: m, temp_C: String(temp || ''), label: label || '', ts: Date.now()
+      }));
+    } catch (e) { /* 사파리 프라이빗 모드 */ }
+  }
+
   /* ── 시작 ─────────────────────────────────────────────── */
   var forced = null;
   try {
@@ -828,6 +862,17 @@
   if (forced && !MODES[forced]) { forced = null; }
 
   var nightNow = isNight();
+
+  function applyWeather(info, temp) {
+    if (!nightNow && info.mode === 'clear') {
+      showBadge(info.label, temp);
+      setMode('clear', false);
+      return;
+    }
+    setMode(info.mode, nightNow);
+    showBadge(info.label, temp);
+  }
+
   sizeCanvas();
   window.addEventListener('resize', function () {
     sizeCanvas();
@@ -848,22 +893,23 @@
     var previewNight = (forced === 'clear') ? nightNow : (nightNow && forced !== 'rain');
     setMode(forced, previewNight);
   } else {
-    /* fetch 전/실패 시: 기본 딥 네이비 + 별빛 */
-    setMode('clear', true);
+    var cached = readWxCache();
+    if (cached) {
+      /* 재방문: 캐시된 날씨 배경을 기다림 없이 먼저 띄운다 */
+      applyWeather({ mode: cached.mode, label: cached.label || MODES[cached.mode] }, cached.temp_C);
+    } else {
+      /* 캐시가 없을 때만: 기본 딥 네이비 + 별빛 */
+      setMode('clear', true);
+    }
     fetchSeoul().then(function (data) {
       var cc = data && data.current_condition && data.current_condition[0];
       if (!cc) { return; }
       var info = classify(cc.weatherCode, cc.cloudcover);
       var temp = cc.temp_C ? String(cc.temp_C) : '';
-      if (!nightNow && info.mode === 'clear') {
-        showBadge(info.label, temp);
-        setMode('clear', false);
-        return;
-      }
-      setMode(info.mode, nightNow);
-      showBadge(info.label, temp);
+      applyWeather(info, temp);
+      writeWxCache(info.mode, temp, info.label);
     }).catch(function () {
-      /* 조용히 기본 별빛 배경 유지 (배지도 표시하지 않음) */
+      /* API 완전 실패: 캐시된 배경이 있으면 그대로 두고, 캐시도 없을 때만 별빛 유지 */
     });
   }
 })();
